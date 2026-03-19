@@ -222,12 +222,7 @@ class PGC_Quote_Calculator {
             }
         }
         
-        if (!empty($this->answers['soffit_fascia'])) {
-            $addon = pgc_get_price_item('gutter-cleaning', 'soffit-fascia');
-            if ($addon) {
-                $this->addons[] = ['item' => $addon['item_value'], 'price' => floatval($addon['price'])];
-            }
-        }
+
     }
     
     private function calculate_domestic_cleaning(): void {

@@ -398,7 +398,7 @@ function pgc_ajax_calculate_quote_v2() {
                 $total += $veluxPrice;
                 $breakdown[] = ['item' => 'Velux windows (' . $veluxCount . ')', 'price' => $veluxPrice];
             }
-            $upsells[] = ['item' => 'Add soffit & fascia cleaning', 'price' => 50, 'id' => 'soffit_fascia'];
+
             break;
             
         case 'gutter-cleaning':
@@ -587,6 +587,12 @@ function pgc_ajax_calculate_quote_v2() {
  * Styled Email Templates
  */
 function pgc_get_email_header() {
+    // Base64 encoded logo to prevent email client blocking
+    $logo_base64 = file_exists(PGC_PATH . '/assets/images/logo-email.base64') 
+        ? file_get_contents(PGC_PATH . '/assets/images/logo-email.base64')
+        : '';
+    $logo_src = $logo_base64 ? 'data:image/png;base64,' . $logo_base64 : PGC_URL . '/assets/images/logo-email.png';
+    
     return '<!DOCTYPE html>
 <html>
 <head>
@@ -601,7 +607,7 @@ function pgc_get_email_header() {
                 <table role="presentation" style="width: 600px; border-collapse: collapse; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <tr>
                         <td style="background: linear-gradient(135deg, #0891b2 0%, #10b981 100%); padding: 32px; text-align: center;">
-                            <img src="' . PGC_URL . '/assets/images/logo-email.png" alt="ProGreenClean" style="height: 40px; width: auto;">
+                            <img src="' . $logo_src . '" alt="ProGreenClean" width="150" height="40" style="height: 40px; width: auto; display: block; margin: 0 auto;">
                         </td>
                     </tr>
                     <tr>

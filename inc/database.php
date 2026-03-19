@@ -126,7 +126,7 @@ function pgc_seed_default_pricing(): void {
         // Gutter Addons
         ['gutter-cleaning', 'addon', 'extension', 'Extension', 10.00, 'fixed', null, null, null, 'Additional extension'],
         ['gutter-cleaning', 'addon', 'conservatory', 'Conservatory Gutters', 10.00, 'fixed', null, null, null, 'Conservatory gutter cleaning'],
-        ['gutter-cleaning', 'addon', 'soffit-fascia', 'Soffit & Fascia', 40.00, 'fixed', null, null, null, 'Soffit and fascia cleaning'],
+
         
         // Solar Panel Cleaning
         ['solar-panel-cleaning', 'residential', '1-10-panels', '1-10 Panels', 100.00, 'fixed', null, null, null, '£80-120 range, average'],
