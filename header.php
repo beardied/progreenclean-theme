@@ -3,6 +3,12 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo esc_url(PGC_URL . '/assets/images/favicon-32.png'); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo esc_url(PGC_URL . '/assets/images/apple-touch-icon.png'); ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?php echo esc_url(PGC_URL . '/assets/images/logo-icon-512.png'); ?>">
+    
     <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
