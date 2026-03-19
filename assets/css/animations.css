@@ -1,0 +1,90 @@
+/**
+ * ProGreenClean Animations
+ */
+
+/* Base animation setup */
+.pgc-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0.0, 0.2, 1),
+                transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.pgc-animate.pgc-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Staggered animations */
+[data-animate="true"] > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+[data-animate="true"].pgc-visible > *:nth-child(1) { transition-delay: 0ms; opacity: 1; transform: translateY(0); }
+[data-animate="true"].pgc-visible > *:nth-child(2) { transition-delay: 80ms; opacity: 1; transform: translateY(0); }
+[data-animate="true"].pgc-visible > *:nth-child(3) { transition-delay: 160ms; opacity: 1; transform: translateY(0); }
+[data-animate="true"].pgc-visible > *:nth-child(4) { transition-delay: 240ms; opacity: 1; transform: translateY(0); }
+[data-animate="true"].pgc-visible > *:nth-child(5) { transition-delay: 320ms; opacity: 1; transform: translateY(0); }
+[data-animate="true"].pgc-visible > *:nth-child(6) { transition-delay: 400ms; opacity: 1; transform: translateY(0); }
+
+/* Scale fade animation */
+.pgc-animate-scale {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.pgc-animate-scale.pgc-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Slide in from left */
+.pgc-animate-slide-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.pgc-animate-slide-left.pgc-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Button hover effects */
+.pgc-button {
+    transition: all 0.2s ease;
+}
+
+.pgc-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.pgc-button:active {
+    transform: translateY(0);
+}
+
+/* Service card hover */
+.pgc-service-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pgc-service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .pgc-animate,
+    .pgc-animate-scale,
+    .pgc-animate-slide-left,
+    [data-animate="true"] > * {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}

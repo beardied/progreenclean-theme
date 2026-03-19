@@ -1,0 +1,156 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/theme.json",
+    "version": 3,
+    "settings": {
+        "appearanceTools": true,
+        "color": {
+            "palette": [
+                {
+                    "color": "#2E7D32",
+                    "name": "Primary Green",
+                    "slug": "primary"
+                },
+                {
+                    "color": "#1B5E20",
+                    "name": "Primary Dark",
+                    "slug": "primary-dark"
+                },
+                {
+                    "color": "#81C784",
+                    "name": "Secondary Green",
+                    "slug": "secondary"
+                },
+                {
+                    "color": "#E8F5E9",
+                    "name": "Light Green",
+                    "slug": "light-green"
+                },
+                {
+                    "color": "#FF6B00",
+                    "name": "Accent Orange",
+                    "slug": "accent"
+                },
+                {
+                    "color": "#1a1a1a",
+                    "name": "Dark Text",
+                    "slug": "dark"
+                },
+                {
+                    "color": "#666666",
+                    "name": "Grey Text",
+                    "slug": "grey"
+                },
+                {
+                    "color": "#f5f5f5",
+                    "name": "Light Grey",
+                    "slug": "light-grey"
+                },
+                {
+                    "color": "#ffffff",
+                    "name": "White",
+                    "slug": "white"
+                }
+            ]
+        },
+        "layout": {
+            "contentSize": "800px",
+            "wideSize": "1200px"
+        },
+        "spacing": {
+            "units": ["px", "em", "rem", "vh", "vw", "%"],
+            "padding": true,
+            "margin": true,
+            "blockGap": true
+        },
+        "typography": {
+            "fontSizes": [
+                {
+                    "name": "Small",
+                    "size": "0.875rem",
+                    "slug": "small"
+                },
+                {
+                    "name": "Medium",
+                    "size": "1rem",
+                    "slug": "medium"
+                },
+                {
+                    "name": "Large",
+                    "size": "1.25rem",
+                    "slug": "large"
+                },
+                {
+                    "name": "X-Large",
+                    "size": "1.5rem",
+                    "slug": "x-large"
+                },
+                {
+                    "name": "XX-Large",
+                    "size": "2rem",
+                    "slug": "xx-large"
+                }
+            ]
+        }
+    },
+    "styles": {
+        "color": {
+            "background": "#ffffff",
+            "text": "#1a1a1a"
+        },
+        "typography": {
+            "fontSize": "1rem",
+            "lineHeight": "1.6"
+        },
+        "elements": {
+            "heading": {
+                "typography": {
+                    "fontWeight": "700"
+                }
+            },
+            "button": {
+                "color": {
+                    "background": "#2E7D32",
+                    "text": "#ffffff"
+                },
+                "border": {
+                    "radius": "4px"
+                },
+                "spacing": {
+                    "padding": {
+                        "top": "12px",
+                        "bottom": "12px",
+                        "left": "24px",
+                        "right": "24px"
+                    }
+                }
+            }
+        }
+    },
+    "templateParts": [
+        {
+            "name": "header",
+            "area": "header"
+        },
+        {
+            "name": "footer",
+            "area": "footer"
+        }
+    ],
+    "customTemplates": [
+        {
+            "name": "service-page",
+            "title": "Service Page",
+            "postTypes": ["page"]
+        },
+        {
+            "name": "location-page",
+            "title": "Location Page",
+            "postTypes": ["page"]
+        },
+        {
+            "name": "quote-page",
+            "title": "Quote Page",
+            "postTypes": ["page"]
+        }
+    ]
+}

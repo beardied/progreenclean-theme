@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "progreenclean/service-grid",
+    "version": "1.0.0",
+    "title": "PGC Service Grid",
+    "category": "progreenclean",
+    "icon": "grid-view",
+    "description": "Display cleaning services in a filterable grid",
+    "supports": {"html": false, "align": ["wide", "full"]},
+    "attributes": {
+        "columns": {"type": "number", "default": 3},
+        "filterEnabled": {"type": "boolean", "default": true},
+        "showAll": {"type": "boolean", "default": false},
+        "category": {"type": "string", "default": ""},
+        "animate": {"type": "boolean", "default": true}
+    },
+    "render": "file:./render.php"
+}

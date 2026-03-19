@@ -1,0 +1,15 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "progreenclean/process-steps",
+    "version": "1.0.0",
+    "title": "PGC Process Steps",
+    "category": "progreenclean",
+    "icon": "list-numbered",
+    "description": "Numbered process steps with icons",
+    "supports": {"html": false},
+    "attributes": {
+        "animate": {"type": "boolean", "default": true}
+    },
+    "render": "file:./render.php"
+}

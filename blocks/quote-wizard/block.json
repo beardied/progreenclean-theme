@@ -1,0 +1,15 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "progreenclean/quote-wizard",
+    "version": "1.0.0",
+    "title": "PGC Quote Wizard",
+    "category": "progreenclean",
+    "icon": "calculator",
+    "description": "Multi-step quote calculator and booking form",
+    "supports": {"html": false, "align": ["wide", "full"]},
+    "attributes": {
+        "service": {"type": "string", "default": ""}
+    },
+    "render": "file:./render.php"
+}

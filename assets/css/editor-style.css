@@ -1,0 +1,14 @@
+/**
+ * Editor Styles
+ */
+
+.editor-styles-wrapper {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Ensure blocks are visible in editor */
+.pgc-animate,
+.pgc-animate-scale {
+  opacity: 1 !important;
+  transform: none !important;
+}
