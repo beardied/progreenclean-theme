@@ -116,10 +116,7 @@
                 { value: 'front', label: 'Front only' },
                 { value: 'rear', label: 'Rear only' },
             ]},
-            { id: 'soffit_fascia', label: 'Soffit and fascia cleaning?', type: 'single', yesNo: true, options: [
-                { value: 'no', label: 'No' },
-                { value: 'yes', label: 'Yes' },
-            ]},
+
             { id: 'parking', label: 'Is parking available?', type: 'single', yesNo: true, options: [
                 { value: 'no', label: 'No' },
                 { value: 'yes', label: 'Yes' },
@@ -323,8 +320,11 @@
             setTimeout(showNextQuestion, 300);
         });
         
-        $(document).on('click', '.question-tile.multi', function() {
+        $(document).on('click', '.question-tile.multi', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             $(this).toggleClass('selected');
+            return false;
         });
         
         $(document).on('click', '#question-continue', function() {

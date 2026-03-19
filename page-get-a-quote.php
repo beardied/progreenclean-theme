@@ -188,8 +188,9 @@ get_header();
     background: rgba(8, 145, 178, 0.05);
 }
 .question-tile.selected {
-    border-color: var(--pgc-primary);
-    background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    border-color: var(--pgc-primary) !important;
+    background: linear-gradient(135deg, rgba(8, 145, 178, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%) !important;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
 }
 .upsell-toggle:hover {
     border-color: var(--pgc-primary);

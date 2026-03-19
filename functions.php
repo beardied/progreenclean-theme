@@ -420,12 +420,7 @@ function pgc_ajax_calculate_quote_v2() {
                 $total += 10;
                 $breakdown[] = ['item' => 'Extension', 'price' => 10];
             }
-            if (($answers['soffit_fascia'] ?? 'no') === 'no') {
-                $upsells[] = ['item' => 'Add soffit & fascia cleaning', 'price' => 50, 'id' => 'soffit_fascia'];
-            } else {
-                $total += 50;
-                $breakdown[] = ['item' => 'Soffit & fascia cleaning', 'price' => 50];
-            }
+
             break;
             
         case 'domestic-cleaning':
@@ -606,7 +601,7 @@ function pgc_get_email_header() {
                 <table role="presentation" style="width: 600px; border-collapse: collapse; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <tr>
                         <td style="background: linear-gradient(135deg, #0891b2 0%, #10b981 100%); padding: 32px; text-align: center;">
-                            <img src="' . PGC_URL . '/assets/images/logo.png" alt="ProGreenClean" style="height: 50px; width: auto;">
+                            <img src="' . PGC_URL . '/assets/images/logo-email.png" alt="ProGreenClean" style="height: 40px; width: auto;">
                         </td>
                     </tr>
                     <tr>
