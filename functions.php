@@ -24,8 +24,48 @@ add_action('after_setup_theme', function() {
     
     register_nav_menus([
         'primary' => __('Primary Menu', 'progreenclean'),
-        'footer' => __('Footer Menu', 'progreenclean'),
+        'footer-services' => __('Footer - Services', 'progreenclean'),
+        'footer-locations' => __('Footer - Locations', 'progreenclean'),
     ]);
+});
+
+/**
+ * Disable All Comments
+ */
+add_action('after_setup_theme', function() {
+    // Remove comment support from all post types
+    foreach (get_post_types() as $post_type) {
+        if (post_type_supports($post_type, 'comments')) {
+            remove_post_type_support($post_type, 'comments');
+            remove_post_type_support($post_type, 'trackbacks');
+        }
+    }
+}, 100);
+
+// Close comments on frontend
+add_filter('comments_open', '__return_false', 20, 2);
+add_filter('pings_open', '__return_false', 20, 2);
+
+// Hide existing comments
+add_filter('comments_array', '__return_empty_array', 10, 2);
+
+// Remove comments from admin menu
+add_action('admin_menu', function() {
+    remove_menu_page('edit-comments.php');
+});
+
+// Remove comments from admin bar
+add_action('wp_before_admin_bar_render', function() {
+    global $wp_admin_bar;
+    $wp_admin_bar->remove_menu('comments');
+});
+
+// Disable comments feed
+add_action('wp', function() {
+    if (is_comment_feed()) {
+        wp_redirect(home_url(), 301);
+        exit;
+    }
 });
 
 /**
@@ -42,6 +82,11 @@ add_action('wp_enqueue_scripts', function() {
         wp_localize_script('progreenclean-quote-v2', 'pgc_ajax', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('pgc_nonce'),
+            'conservatory_sizes' => [
+                'small' => pgc_get_text_option('ow_win_cons_roof_small_size') ?: '3x3m',
+                'medium' => pgc_get_text_option('ow_win_cons_roof_medium_size') ?: '4x4m / Lean to',
+                'large' => pgc_get_text_option('ow_win_cons_roof_large_size') ?: '5x5m',
+            ],
         ]);
     }
 });
@@ -701,7 +746,43 @@ function pgc_ajax_submit_quote_v2() {
     }
     $admin_message .= pgc_get_email_footer();
     
-    wp_mail($admin_email, $admin_subject, $admin_message, $headers);
+    // Handle image uploads
+    $attachments = [];
+    if (!empty($_FILES['quote_images'])) {
+        $upload_dir = wp_upload_dir();
+        $quote_upload_dir = $upload_dir['basedir'] . '/quote-uploads/' . $quote_id;
+        
+        if (!file_exists($quote_upload_dir)) {
+            wp_mkdir_p($quote_upload_dir);
+        }
+        
+        $file_count = count($_FILES['quote_images']['name']);
+        for ($i = 0; $i < $file_count; $i++) {
+            if ($_FILES['quote_images']['error'][$i] === UPLOAD_ERR_OK) {
+                $tmp_name = $_FILES['quote_images']['tmp_name'][$i];
+                $name = sanitize_file_name($_FILES['quote_images']['name'][$i]);
+                $file_path = $quote_upload_dir . '/' . $name;
+                
+                // Validate file type
+                $file_type = wp_check_filetype($name, ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp']);
+                if ($file_type['type'] && move_uploaded_file($tmp_name, $file_path)) {
+                    $attachments[] = $file_path;
+                }
+            }
+        }
+        
+        // Add image reference to admin email
+        if (!empty($attachments)) {
+            $admin_message = str_replace('</body>', '<p style="color: #0891b2; margin-top: 24px;"><strong>Images Attached:</strong> ' . count($attachments) . ' image(s) uploaded with this quote.</p></body>', $admin_message);
+        }
+    }
+    
+    // Send admin email with attachments
+    if (!empty($attachments)) {
+        wp_mail($admin_email, $admin_subject, $admin_message, $headers, $attachments);
+    } else {
+        wp_mail($admin_email, $admin_subject, $admin_message, $headers);
+    }
     
     wp_send_json_success(['quote_id' => $quote_id]);
 }
@@ -767,6 +848,31 @@ function pgc_handle_contact_form() {
  */
 add_shortcode('pgc_phone', function() {
     return esc_html(get_option('pgc_phone', '0800 123 4567'));
+});
+
+/**
+ * Price Shortcode - Display pricing values from admin
+ * Usage: [pgc_price key="ow_win_2bed_oneoff"] or [pgc_price key="ow_eot_2bed" prefix="From £" suffix="+"]
+ */
+add_shortcode('pgc_price', function($atts) {
+    $atts = shortcode_atts([
+        'key' => '',
+        'prefix' => '£',
+        'suffix' => '',
+        'decimals' => 2,
+    ], $atts);
+    
+    if (empty($atts['key'])) {
+        return '';
+    }
+    
+    $price = pgc_get_price($atts['key']);
+    
+    if ($price <= 0) {
+        return '';
+    }
+    
+    return esc_html($atts['prefix'] . number_format($price, intval($atts['decimals'])) . $atts['suffix']);
 });
 
 /**
@@ -904,6 +1010,8 @@ function pgc_render_pricing_page_v3() {
                                             <input type="checkbox" name="prices[<?php echo esc_attr($field['key']); ?>]" value="1" <?php checked($value, 1); ?>>
                                         <?php elseif ($field_type === 'text') : ?>
                                             <input type="text" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($value); ?>" style="width: 150px;">
+                                        <?php elseif ($field_type === 'percent') : ?>
+                                            <input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($value); ?>" step="1" min="0" style="width: 80px;"> %
                                         <?php else : ?>
                                             £<input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($value); ?>" step="0.01" min="0" style="width: 100px;">
                                         <?php endif; ?>
@@ -1044,8 +1152,9 @@ function pgc_ajax_calculate_quote_v3() {
         }
         
         // Conservatory Roof - Size based with Internal/External pricing
-        if (isset($answers['win_cons_roof']) && $answers['win_cons_roof']['value'] === 'yes' && isset($answers['win_cons_size'])) {
+        if (isset($answers['win_cons_roof_clean']) && $answers['win_cons_roof_clean']['value'] === 'yes' && isset($answers['win_cons_size'])) {
             $cons_size = $answers['win_cons_size']['value']; // small, medium, large
+            $roof_type = $answers['win_cons_roof_type']['value'] ?? 'glass'; // glass or tiled
             $roof_external_price = 0;
             $roof_internal_price = 0;
             
@@ -1056,11 +1165,12 @@ function pgc_ajax_calculate_quote_v3() {
                 $size_label .= ' (' . $size_def . ')';
             }
             
-            // Calculate based on internal/external selection
+            // Calculate based on internal/external selection AND roof type
+            // If roof is tiled, only external cleaning is possible
             if ($internal_external === 'external' || $internal_external === 'both') {
                 $roof_external_price = pgc_get_price('ow_win_cons_roof_' . $cons_size . '_ext');
             }
-            if ($internal_external === 'internal' || $internal_external === 'both') {
+            if (($internal_external === 'internal' || $internal_external === 'both') && $roof_type === 'glass') {
                 $roof_internal_price = pgc_get_price('ow_win_cons_roof_' . $cons_size . '_int');
             }
             

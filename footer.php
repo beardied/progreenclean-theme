@@ -9,20 +9,40 @@
             <div>
                 <h4 class="pgc-footer-title">Services</h4>
                 <nav class="pgc-footer-links">
-                    <a href="<?php echo home_url('/services/window-cleaning/'); ?>">Window Cleaning</a>
-                    <a href="<?php echo home_url('/services/gutter-cleaning/'); ?>">Gutter Cleaning</a>
-                    <a href="<?php echo home_url('/services/oven-cleaning/'); ?>">Oven Cleaning</a>
-                    <a href="<?php echo home_url('/services/carpet-cleaning/'); ?>">Carpet Cleaning</a>
+                    <?php
+                    wp_nav_menu([
+                        'theme_location' => 'footer-services',
+                        'container' => false,
+                        'items_wrap' => '%3$s',
+                        'fallback_cb' => function() {
+                            // Default links if no menu assigned
+                            echo '<a href="' . home_url('/services/window-cleaning/') . '">Window Cleaning</a>';
+                            echo '<a href="' . home_url('/services/gutter-cleaning/') . '">Gutter Cleaning</a>';
+                            echo '<a href="' . home_url('/services/oven-cleaning/') . '">Oven Cleaning</a>';
+                            echo '<a href="' . home_url('/services/carpet-cleaning/') . '">Carpet Cleaning</a>';
+                        }
+                    ]);
+                    ?>
                 </nav>
             </div>
             
             <div>
                 <h4 class="pgc-footer-title">Locations</h4>
                 <nav class="pgc-footer-links">
-                    <a href="<?php echo home_url('/locations/epsom/'); ?>">Epsom</a>
-                    <a href="<?php echo home_url('/locations/sutton/'); ?>">Sutton</a>
-                    <a href="<?php echo home_url('/locations/kingston/'); ?>">Kingston</a>
-                    <a href="<?php echo home_url('/locations/'); ?>">View All</a>
+                    <?php
+                    wp_nav_menu([
+                        'theme_location' => 'footer-locations',
+                        'container' => false,
+                        'items_wrap' => '%3$s',
+                        'fallback_cb' => function() {
+                            // Default links if no menu assigned
+                            echo '<a href="' . home_url('/locations/epsom/') . '">Epsom</a>';
+                            echo '<a href="' . home_url('/locations/sutton/') . '">Sutton</a>';
+                            echo '<a href="' . home_url('/locations/kingston/') . '">Kingston</a>';
+                            echo '<a href="' . home_url('/locations/') . '">View All</a>';
+                        }
+                    ]);
+                    ?>
                 </nav>
             </div>
             

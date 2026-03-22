@@ -23,7 +23,7 @@ $pgc_pricing_sections = [
         'description' => 'First clean percentage and frequency application settings',
         'type' => 'settings',
         'fields' => [
-            ['key' => 'ow_win_first_clean_pct', 'label' => 'First Clean Percentage (e.g., 50 for +50%)', 'type' => 'number'],
+            ['key' => 'ow_win_first_clean_pct', 'label' => 'First Clean Percentage (e.g., 50 for +50%)', 'type' => 'percent'],
             ['key' => 'ow_win_first_clean_4week', 'label' => 'Apply to 4 Weekly', 'type' => 'checkbox'],
             ['key' => 'ow_win_first_clean_8week', 'label' => 'Apply to 8 Weekly', 'type' => 'checkbox'],
             ['key' => 'ow_win_first_clean_12week', 'label' => 'Apply to 12 Weekly', 'type' => 'checkbox'],
@@ -33,7 +33,7 @@ $pgc_pricing_sections = [
         'description' => 'Internal window pricing settings',
         'type' => 'settings',
         'fields' => [
-            ['key' => 'ow_win_internal_markup', 'label' => 'Internal Windows Markup Percentage (e.g., 25 for +25%)', 'type' => 'number'],
+            ['key' => 'ow_win_internal_markup', 'label' => 'Internal Windows Markup Percentage (e.g., 25 for +25%)', 'type' => 'percent'],
         ]
     ],
     'Window Cleaning - Conservatory Roof' => [

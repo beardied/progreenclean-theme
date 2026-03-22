@@ -46,7 +46,8 @@
                 'win_skylights_qty': 'Number of sky lights',
                 'win_conservatory_check': 'Conservatory',
                 'win_cons_size': 'Conservatory size',
-                'win_cons_roof': 'Conservatory roof clean',
+                'win_cons_roof_type': 'Conservatory roof type',
+                'win_cons_roof_clean': 'Conservatory roof clean',
                 'win_velux_check': 'Velux windows',
                 'win_velux_qty': 'Number of Velux windows',
                 'win_access': 'Rear access',
@@ -204,14 +205,21 @@
         'win_cons_size': {
             question: 'What size is your conservatory?',
             type: 'single',
-            dynamicLabels: true, // Will be populated from admin settings
             options: [
-                { value: 'small', label: 'Small (SIZE)', next: 'win_cons_roof' },
-                { value: 'medium', label: 'Medium (SIZE)', next: 'win_cons_roof' },
-                { value: 'large', label: 'Large (SIZE)', next: 'win_cons_roof' }
+                { value: 'small', label: 'Small', next: 'win_cons_roof_type' },
+                { value: 'medium', label: 'Medium', next: 'win_cons_roof_type' },
+                { value: 'large', label: 'Large', next: 'win_cons_roof_type' }
             ]
         },
-        'win_cons_roof': {
+        'win_cons_roof_type': {
+            question: 'What type of roof does your conservatory have?',
+            type: 'single',
+            options: [
+                { value: 'glass', label: 'Glass/Transparent Roof', next: 'win_cons_roof_clean' },
+                { value: 'tiled', label: 'Tiled/Opaque Roof', next: 'win_cons_roof_clean' }
+            ]
+        },
+        'win_cons_roof_clean': {
             question: 'Would you like the roof of your conservatory cleaned?',
             type: 'single',
             options: [
@@ -586,8 +594,16 @@
             
             if (step.type === 'single') {
                 step.options.forEach(function(opt) {
+                    let label = opt.label;
+                    // Add size definitions for conservatory size step
+                    if (stepId === 'win_cons_size' && window.pgc_ajax && window.pgc_ajax.conservatory_sizes) {
+                        const sizeDef = window.pgc_ajax.conservatory_sizes[opt.value];
+                        if (sizeDef) {
+                            label += ' <span style="color: var(--pgc-gray-500); font-size: 14px;">(' + sizeDef + ')</span>';
+                        }
+                    }
                     html += '<div class="quote-option" data-step="' + stepId + '" data-value="' + opt.value + '" data-next="' + opt.next + '" data-price-key="' + (opt.priceKey || '') + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
-                    html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + opt.label + '</div>';
+                    html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + label + '</div>';
                     html += '</div>';
                 });
             }
@@ -706,7 +722,18 @@
         html += '<div style="margin-bottom: 15px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Postcode *</label><input type="text" name="postcode" required style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px;"></div>';
         
         // Notes
-        html += '<div style="margin-bottom: 25px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Additional Notes</label><textarea name="notes" rows="3" style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px; resize: vertical;"></textarea></div>';
+        html += '<div style="margin-bottom: 20px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Additional Notes</label><textarea name="notes" rows="3" style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px; resize: vertical;"></textarea></div>';
+        
+        // Image Uploads (up to 5 images)
+        html += '<div style="margin-bottom: 25px;">';
+        html += '<label style="display: block; font-weight: 500; margin-bottom: 10px; color: var(--pgc-gray-700);">Upload Images (Optional)</label>';
+        html += '<p style="font-size: 13px; color: var(--pgc-gray-500); margin: 0 0 10px 0;">Upload photos of areas to be cleaned (max 5 images, 5MB each)</p>';
+        html += '<div id="image-upload-container">';
+        for (let i = 1; i <= 5; i++) {
+            html += '<div style="margin-bottom: 8px;"><input type="file" name="quote_images[]" accept="image/*" style="width: 100%; padding: 8px; border: 2px solid var(--pgc-gray-200); border-radius: 8px; font-size: 14px;"></div>';
+        }
+        html += '</div>';
+        html += '</div>';
         
         // Buttons
         html += '<div style="display: flex; gap: 15px; justify-content: center;">';
@@ -766,17 +793,36 @@
     }
     
     function submitQuote() {
-        const form = $('#quote-contact-form');
-        const formData = form.serialize();
+        const form = $('#quote-contact-form')[0];
+        const formData = new FormData(form);
+        formData.append('action', 'pgc_submit_quote_v3');
+        formData.append('nonce', pgc_ajax.nonce);
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+        submitBtn.disabled = true;
         
         $.ajax({
             url: pgc_ajax.ajax_url,
             type: 'POST',
-            data: formData + '&action=pgc_submit_quote_v3&nonce=' + pgc_ajax.nonce,
+            data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
                 if (response.success) {
                     $('#quote-wizard-container').html('<div style="text-align: center; padding: 60px 20px;"><div style="font-size: 64px; margin-bottom: 20px;">✓</div><h2 style="font-size: 1.75rem; font-weight: 800; color: var(--pgc-primary); margin-bottom: 16px;">Thank You!</h2><p style="color: var(--pgc-gray-600);">Your quote request has been submitted. We will be in touch shortly.</p></div>');
+                } else {
+                    alert('There was an error submitting your quote. Please try again.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
                 }
+            },
+            error: function() {
+                alert('There was an error submitting your quote. Please try again.');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         });
     }
