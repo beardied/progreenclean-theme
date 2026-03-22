@@ -69,6 +69,73 @@ add_action('wp', function() {
 });
 
 /**
+ * Page Meta Box - Price Display Settings
+ */
+add_action('add_meta_boxes', function() {
+    add_meta_box(
+        'pgc_page_price_settings',
+        'Price Display Settings',
+        'pgc_render_page_price_meta_box',
+        'page',
+        'side',
+        'default'
+    );
+});
+
+function pgc_render_page_price_meta_box($post) {
+    wp_nonce_field('pgc_page_price_meta', 'pgc_page_price_nonce');
+    
+    $price_key = get_post_meta($post->ID, '_pgc_price_key', true);
+    $price_prefix = get_post_meta($post->ID, '_pgc_price_prefix', true);
+    $price_suffix = get_post_meta($post->ID, '_pgc_price_suffix', true);
+    ?>
+    <p>
+        <label for="pgc_price_key">Price Key:</label><br>
+        <input type="text" id="pgc_price_key" name="pgc_price_key" value="<?php echo esc_attr($price_key); ?>" style="width: 100%;">
+        <small>Enter the price key from the pricing table (e.g., "ow_win_2bed_oneoff")</small>
+    </p>
+    <p>
+        <label for="pgc_price_prefix">Price Prefix:</label><br>
+        <input type="text" id="pgc_price_prefix" name="pgc_price_prefix" value="<?php echo esc_attr($price_prefix); ?>" style="width: 100%;">
+        <small>Text before price (e.g., "From ")</small>
+    </p>
+    <p>
+        <label for="pgc_price_suffix">Price Suffix:</label><br>
+        <input type="text" id="pgc_price_suffix" name="pgc_price_suffix" value="<?php echo esc_attr($price_suffix); ?>" style="width: 100%;">
+        <small>Text after price (e.g., "/hr" or "+")</small>
+    </p>
+    <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+        <strong>Shortcode:</strong><br>
+        <code>[pgc_children parent="<?php echo esc_html($post->post_title); ?>"]</code>
+    </p>
+    <?php
+}
+
+add_action('save_post', function($post_id) {
+    if (!isset($_POST['pgc_page_price_nonce']) || !wp_verify_nonce($_POST['pgc_page_price_nonce'], 'pgc_page_price_meta')) {
+        return;
+    }
+    
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    if (!current_user_can('edit_page', $post_id)) {
+        return;
+    }
+    
+    if (isset($_POST['pgc_price_key'])) {
+        update_post_meta($post_id, '_pgc_price_key', sanitize_text_field($_POST['pgc_price_key']));
+    }
+    if (isset($_POST['pgc_price_prefix'])) {
+        update_post_meta($post_id, '_pgc_price_prefix', sanitize_text_field($_POST['pgc_price_prefix']));
+    }
+    if (isset($_POST['pgc_price_suffix'])) {
+        update_post_meta($post_id, '_pgc_price_suffix', sanitize_text_field($_POST['pgc_price_suffix']));
+    }
+});
+
+/**
  * Enqueue Scripts and Styles
  */
 add_action('wp_enqueue_scripts', function() {
@@ -947,14 +1014,15 @@ add_shortcode('pgc_contact_form', function() {
 
 /**
  * Children Pages Shortcode
- * Usage: [pgc_children parent="Services" feature_price="ow_eot_2bed" feature_price_prefix="From £"]
+ * Usage: [pgc_children parent="Services"]
+ * Each child page can have meta fields:
+ * - _pgc_price_key: Price key from pricing table (e.g., "ow_eot_2bed")
+ * - _pgc_price_prefix: Text before price (e.g., "From ")
+ * - _pgc_price_suffix: Text after price (e.g., "+")
  */
 add_shortcode('pgc_children', function($atts) {
     $atts = shortcode_atts([
         'parent' => '',
-        'feature_price' => '',
-        'feature_price_prefix' => '',
-        'feature_price_suffix' => '',
         'orderby' => 'menu_order title',
         'order' => 'ASC',
     ], $atts);
@@ -990,22 +1058,38 @@ add_shortcode('pgc_children', function($atts) {
     <div class="pgc-service-grid">
         <?php foreach ($children as $child) : 
             $excerpt = $child->post_excerpt ?: wp_trim_words($child->post_content, 20);
-            $icon = get_post_meta($child->ID, '_pgc_service_icon', true) ?: '🧹';
-            $price_html = '';
             
-            if ($atts['feature_price']) {
-                $price = pgc_get_price($atts['feature_price']);
+            // Get price meta fields from each child page
+            $price_key = get_post_meta($child->ID, '_pgc_price_key', true);
+            $price_prefix = get_post_meta($child->ID, '_pgc_price_prefix', true);
+            $price_suffix = get_post_meta($child->ID, '_pgc_price_suffix', true);
+            
+            $price_html = '';
+            if ($price_key) {
+                $price = pgc_get_price($price_key);
                 if ($price > 0) {
-                    $price_html = '<span class="pgc-service-card__price">' . 
-                        esc_html($atts['feature_price_prefix']) . 
-                        '£' . number_format($price, 2) . 
-                        esc_html($atts['feature_price_suffix']) . 
-                        '</span>';
+                    $price_html = '<span class="pgc-service-card__price">';
+                    if ($price_prefix) {
+                        $price_html .= '<span class="pgc-service-card__price-prefix">' . esc_html($price_prefix) . '</span>';
+                    }
+                    $price_html .= '<span class="pgc-service-card__price-value">£' . number_format($price, 2) . '</span>';
+                    if ($price_suffix) {
+                        $price_html .= '<span class="pgc-service-card__price-suffix">' . esc_html($price_suffix) . '</span>';
+                    }
+                    $price_html .= '</span>';
                 }
+            }
+            
+            // Get featured image
+            $image_html = '';
+            if (has_post_thumbnail($child->ID)) {
+                $image_html = get_the_post_thumbnail($child->ID, 'medium', ['class' => 'pgc-service-card__image']);
             }
         ?>
             <article class="pgc-service-card">
-                <div class="pgc-service-card__icon"><?php echo esc_html($icon); ?></div>
+                <?php if ($image_html) : ?>
+                    <div class="pgc-service-card__image-wrap"><?php echo $image_html; ?></div>
+                <?php endif; ?>
                 <h3 class="pgc-service-card__title"><?php echo esc_html($child->post_title); ?></h3>
                 <p class="pgc-service-card__description"><?php echo esc_html($excerpt); ?></p>
                 <div class="pgc-service-card__footer">
