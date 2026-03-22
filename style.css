@@ -965,6 +965,46 @@ a:hover { color: var(--pgc-primary-dark); }
     font-size: 14px;
 }
 
+/* ===== TEAM SECTION ===== */
+.pgc-section--gray {
+    background: var(--pgc-gray-50);
+}
+
+.pgc-team-grid {
+    margin-top: 40px;
+}
+
+.pgc-team-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    height: 100%;
+}
+
+.pgc-team-icon {
+    margin-bottom: 16px;
+}
+
+.pgc-team-card h3 {
+    color: var(--pgc-gray-900);
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+}
+
+.pgc-team-role {
+    color: var(--pgc-primary);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.pgc-team-card p {
+    color: var(--pgc-gray-600);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
     .pgc-hero-content {
