@@ -931,6 +931,20 @@ a:hover { color: var(--pgc-primary-dark); }
     gap: 12px;
 }
 
+.pgc-footer-links ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pgc-footer-links li {
+    margin: 0;
+    padding: 0;
+}
+
 .pgc-footer-links a {
     color: var(--pgc-gray-400);
     font-size: 15px;

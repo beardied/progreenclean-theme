@@ -120,7 +120,7 @@
                 { value: 'end-of-tenancy', label: 'Deep Clean/End of Tenancy Cleaning', next: 'eot_prop_type' },
                 { value: 'post-construction', label: 'Post Construction Cleaning', next: 'contact_form' },
                 { value: 'commercial-cleaning', label: 'Commercial Cleaning Exterior and Interior', next: 'contact_form' },
-                { value: 'carpet-cleaning', label: 'Carpet Cleaning from Pricing Only', next: 'carpet_prop_type' },
+                { value: 'carpet-cleaning', label: 'Carpet Cleaning', next: 'carpet_prop_type' },
                 { value: 'oven-cleaning', label: 'Oven Cleaning', next: 'oven_size' },
                 { value: 'pressure-washing', label: 'Pressure Washing', next: 'pw_location' },
                 { value: 'solar-panel', label: 'Solar Panel Cleaning', next: 'contact_form' },
@@ -198,33 +198,33 @@
             question: 'Does your property have a conservatory?',
             type: 'single',
             options: [
-                { value: 'yes', label: 'Yes', next: 'win_cons_size' },
+                { value: 'yes', label: 'Yes', next: 'win_cons_roof_clean' },
                 { value: 'no', label: 'No', next: 'win_velux_check' }
-            ]
-        },
-        'win_cons_size': {
-            question: 'What size is your conservatory?',
-            type: 'single',
-            options: [
-                { value: 'small', label: 'Small', next: 'win_cons_roof_type' },
-                { value: 'medium', label: 'Medium', next: 'win_cons_roof_type' },
-                { value: 'large', label: 'Large', next: 'win_cons_roof_type' }
-            ]
-        },
-        'win_cons_roof_type': {
-            question: 'What type of roof does your conservatory have?',
-            type: 'single',
-            options: [
-                { value: 'glass', label: 'Glass/Transparent Roof', next: 'win_cons_roof_clean' },
-                { value: 'tiled', label: 'Tiled/Opaque Roof', next: 'win_cons_roof_clean' }
             ]
         },
         'win_cons_roof_clean': {
             question: 'Would you like the roof of your conservatory cleaned?',
             type: 'single',
             options: [
-                { value: 'yes', label: 'Yes', next: 'win_velux_check' },
+                { value: 'yes', label: 'Yes', next: 'win_cons_roof_type' },
                 { value: 'no', label: 'No', next: 'win_velux_check' }
+            ]
+        },
+        'win_cons_roof_type': {
+            question: 'What type of roof does your conservatory have?',
+            type: 'single',
+            options: [
+                { value: 'glass', label: 'Glass/Transparent Roof', next: 'win_cons_size' },
+                { value: 'tiled', label: 'Tiled/Opaque Roof', next: 'win_cons_size' }
+            ]
+        },
+        'win_cons_size': {
+            question: 'What size is your conservatory?',
+            type: 'single',
+            options: [
+                { value: 'small', label: 'Small', next: 'win_velux_check' },
+                { value: 'medium', label: 'Medium', next: 'win_velux_check' },
+                { value: 'large', label: 'Large', next: 'win_velux_check' }
             ]
         },
         'win_velux_check': {
@@ -776,7 +776,18 @@
         html += '<div style="margin-bottom: 15px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Phone *</label><input type="tel" name="phone" required style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px;"></div>';
         html += '<div style="margin-bottom: 15px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Address *</label><input type="text" name="address" required style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px;"></div>';
         html += '<div style="margin-bottom: 15px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Postcode *</label><input type="text" name="postcode" required style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px;"></div>';
-        html += '<div style="margin-bottom: 25px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Additional Notes</label><textarea name="notes" rows="3" style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px; resize: vertical;"></textarea></div>';
+        html += '<div style="margin-bottom: 20px;"><label style="display: block; font-weight: 500; margin-bottom: 5px; color: var(--pgc-gray-700);">Additional Notes</label><textarea name="notes" rows="3" style="width: 100%; padding: 12px; border: 2px solid var(--pgc-gray-200); border-radius: 8px; resize: vertical;"></textarea></div>';
+        
+        // Image Uploads (up to 5 images)
+        html += '<div style="margin-bottom: 25px;">';
+        html += '<label style="display: block; font-weight: 500; margin-bottom: 10px; color: var(--pgc-gray-700);">Upload Images (Optional)</label>';
+        html += '<p style="font-size: 13px; color: var(--pgc-gray-500); margin: 0 0 10px 0;">Upload photos of areas to be cleaned (max 5 images, 5MB each)</p>';
+        html += '<div id="image-upload-container">';
+        for (let i = 1; i <= 5; i++) {
+            html += '<div style="margin-bottom: 8px;"><input type="file" name="quote_images[]" accept="image/*" style="width: 100%; padding: 8px; border: 2px solid var(--pgc-gray-200); border-radius: 8px; font-size: 14px;"></div>';
+        }
+        html += '</div>';
+        html += '</div>';
         
         html += '<div style="display: flex; gap: 15px; justify-content: center;">';
         html += '<button type="button" id="quote-back" class="pgc-btn pgc-btn-outline">← Back</button>';
