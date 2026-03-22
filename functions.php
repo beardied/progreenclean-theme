@@ -38,8 +38,8 @@ add_action('wp_enqueue_scripts', function() {
     wp_enqueue_script('progreenclean-main', PGC_URL . '/assets/js/main.js', [], $cache_buster, true);
     
     if (is_page('get-a-quote')) {
-        wp_enqueue_script('progreenclean-quote', PGC_URL . '/assets/js/quote-wizard.js', ['jquery'], $cache_buster, true);
-        wp_localize_script('progreenclean-quote', 'pgc_ajax', [
+        wp_enqueue_script('progreenclean-quote-v2', PGC_URL . '/assets/js/quote-wizard-v2.js', ['jquery'], $cache_buster, true);
+        wp_localize_script('progreenclean-quote-v2', 'pgc_ajax', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('pgc_nonce'),
         ]);
@@ -791,3 +791,251 @@ add_action('wp_head', function() {
     ];
     echo '<script type="application/ld+json">' . wp_json_encode($schema) . '</script>';
 });
+
+
+/**
+ * Include Pricing Configuration
+ */
+require_once PGC_PATH . '/inc/pricing-config.php';
+
+/**
+ * New Admin Pricing Page V3
+ */
+function pgc_render_pricing_page_v3() {
+    // Save pricing
+    if (isset($_POST['pgc_save_pricing']) && check_admin_referer('pgc_pricing_nonce')) {
+        global $pgc_pricing_sections;
+        foreach ($pgc_pricing_sections as $section_name => $section) {
+            foreach ($section['fields'] as $field) {
+                $key = $field['key'];
+                if (isset($_POST['prices'][$key])) {
+                    update_option('pgc_price_' . $key, floatval($_POST['prices'][$key]));
+                }
+            }
+        }
+        echo '<div class="notice notice-success"><p>Pricing saved successfully!</p></div>';
+    }
+    
+    global $pgc_pricing_sections;
+    ?>
+    <div class="wrap">
+        <h1>ProGreenClean Pricing Management</h1>
+        <p style="color: #666; margin-bottom: 20px;">Configure pricing for all services. These prices are used in the quote calculator.</p>
+        
+        <form method="post">
+            <?php wp_nonce_field('pgc_pricing_nonce'); ?>
+            
+            <?php foreach ($pgc_pricing_sections as $section_name => $section) : ?>
+            <div class="pgc-pricing-section" style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; margin-bottom: 20px;">
+                <div class="pgc-section-header" style="background: linear-gradient(135deg, #0891b2 0%, #10b981 100%); color: #fff; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="jQuery(this).next().toggle(); jQuery(this).find('.dashicons').toggleClass('dashicons-arrow-down dashicons-arrow-up');">
+                    <div>
+                        <h2 style="margin: 0; font-size: 18px; color: #fff;"><?php echo esc_html($section_name); ?></h2>
+                        <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;"><?php echo esc_html($section['description']); ?></p>
+                    </div>
+                    <span class="dashicons dashicons-arrow-up" style="color: #fff;"></span>
+                </div>
+                <div class="pgc-section-content" style="padding: 20px;">
+                    <table class="wp-list-table widefat striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 60%;">Service / Option</th>
+                                <th>Price (£)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($section['fields'] as $field) : 
+                                $price = pgc_get_price($field['key']);
+                            ?>
+                            <tr>
+                                <td><?php echo esc_html($field['label']); ?><br><code style="font-size: 11px; color: #999;"><?php echo esc_html($field['key']); ?></code></td>
+                                <td><input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;"></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <?php endforeach; ?>
+            
+            <?php submit_button('Save All Pricing', 'primary', 'pgc_save_pricing'); ?>
+        </form>
+    </div>
+    <?php
+}
+
+// Replace the old pricing page hook
+add_action('admin_menu', function() {
+    remove_menu_page('pgc-pricing'); // Remove old if exists
+    add_menu_page('PGC Pricing', 'PGC Pricing', 'manage_options', 'pgc-pricing-v3', 'pgc_render_pricing_page_v3', 'dashicons-money-alt', 30);
+    add_submenu_page('pgc-pricing-v3', 'PGC Settings', 'Settings', 'manage_options', 'pgc-settings', 'pgc_render_settings_page');
+}, 20);
+
+/**
+ * AJAX: Calculate Quote V3
+ */
+add_action('wp_ajax_pgc_calculate_quote_v3', 'pgc_ajax_calculate_quote_v3');
+add_action('wp_ajax_nopriv_pgc_calculate_quote_v3', 'pgc_ajax_calculate_quote_v3');
+
+function pgc_ajax_calculate_quote_v3() {
+    check_ajax_referer('pgc_nonce', 'nonce');
+    
+    $service = sanitize_text_field($_POST['service'] ?? '');
+    $price_keys = $_POST['price_keys'] ?? [];
+    $answers = json_decode(stripslashes($_POST['answers'] ?? '{}'), true);
+    
+    $total = 0;
+    $breakdown = [];
+    
+    // Calculate based on price keys
+    if (is_array($price_keys)) {
+        foreach ($price_keys as $key) {
+            $price = pgc_get_price(sanitize_text_field($key));
+            if ($price > 0) {
+                $total += $price;
+                // Get label from answers
+                $label = $key;
+                foreach ($answers as $step => $answer) {
+                    if (isset($answer['priceKey']) && $answer['priceKey'] === $key) {
+                        $label = $answer['label'] ?? $key;
+                        break;
+                    }
+                }
+                $breakdown[] = ['label' => $label, 'price' => $price];
+            }
+        }
+    }
+    
+    // Special calculations for multi-unit items
+    if ($service === 'window-cleaning' && isset($answers['win_velux_qty'])) {
+        $velux_qty = intval($answers['win_velux_qty']['value'] ?? 0);
+        if ($velux_qty > 0) {
+            $unit_price = pgc_get_price('ow_win_velux_unit_price');
+            $velux_total = $velux_qty * $unit_price;
+            $total += $velux_total;
+            $breakdown[] = ['label' => 'Velux Windows (' . $velux_qty . ')', 'price' => $velux_total];
+        }
+    }
+    
+    if ($service === 'end-of-tenancy' && isset($answers['eot_carpets_qty'])) {
+        $carpet_qty = intval($answers['eot_carpets_qty']['value'] ?? 0);
+        if ($carpet_qty > 0 && is_numeric($answers['eot_carpets_qty']['value'])) {
+            $unit_price = pgc_get_price('ow_carpet_unit');
+            $carpet_total = $carpet_qty * $unit_price;
+            $total += $carpet_total;
+            $breakdown[] = ['label' => 'Carpet Cleaning (' . $carpet_qty . ' rooms)', 'price' => $carpet_total];
+        }
+    }
+    
+    // Hourly rate calculations
+    if ($service === 'domestic-cleaning' && isset($answers['dom_hours'])) {
+        $hours = intval($answers['dom_hours']['value'] ?? 2);
+        $hourly_rate = pgc_get_price('ow_dom_hourly_rate');
+        $domestic_total = $hours * $hourly_rate;
+        // Remove the base price and use calculated
+        $total = $domestic_total;
+        foreach ($breakdown as $i => $item) {
+            if ($item['label'] === '2 Hours' || $item['label'] === '3 Hours' || $item['label'] === '4 Hours' || $item['label'] === '5+ Hours') {
+                unset($breakdown[$i]);
+            }
+        }
+        $breakdown = array_values($breakdown);
+        $breakdown[] = ['label' => 'Domestic Cleaning (' . $hours . ' hours @ £' . $hourly_rate . '/hr)', 'price' => $domestic_total];
+    }
+    
+    wp_send_json_success([
+        'total' => $total,
+        'breakdown' => $breakdown,
+    ]);
+}
+
+/**
+ * AJAX: Submit Quote V3
+ */
+add_action('wp_ajax_pgc_submit_quote_v3', 'pgc_ajax_submit_quote_v3');
+add_action('wp_ajax_nopriv_pgc_submit_quote_v3', 'pgc_ajax_submit_quote_v3');
+
+function pgc_ajax_submit_quote_v3() {
+    check_ajax_referer('pgc_nonce', 'nonce');
+    
+    $quote_id = 'PGC-' . date('Y') . '-' . strtoupper(wp_generate_password(6, false));
+    $from_email = get_option('pgc_from_email', 'quotes@progreenclean.co.uk');
+    $admin_email = get_option('pgc_quote_email', get_option('admin_email'));
+    
+    $quote_data = json_decode(urldecode($_POST['quote_data'] ?? '{}'), true);
+    
+    $data = [
+        'quote_id' => $quote_id,
+        'service' => sanitize_text_field($quote_data['service'] ?? ''),
+        'first_name' => sanitize_text_field($_POST['first_name'] ?? ''),
+        'last_name' => sanitize_text_field($_POST['last_name'] ?? ''),
+        'email' => sanitize_email($_POST['email'] ?? ''),
+        'phone' => sanitize_text_field($_POST['phone'] ?? ''),
+        'address' => sanitize_textarea_field($_POST['address'] ?? ''),
+        'postcode' => sanitize_text_field($_POST['postcode'] ?? ''),
+        'notes' => sanitize_textarea_field($_POST['notes'] ?? ''),
+        'price' => floatval($quote_data['price'] ?? 0),
+        'breakdown' => $quote_data['breakdown'] ?? [],
+        'answers' => $quote_data['answers'] ?? [],
+    ];
+    
+    // Build quote summary
+    $quote_summary = '';
+    foreach ($data['answers'] as $step => $answer) {
+        if (is_array($answer) && isset($answer['label'])) {
+            $quote_summary .= $answer['label'] . "\n";
+        }
+    }
+    
+    // Customer Email
+    $customer_subject = 'Your ProGreenClean Quote - ' . $quote_id;
+    $customer_message = pgc_get_email_header();
+    $customer_message .= '<h2 style="color: #0891b2; margin-top: 0;">Thank you for your quote request, ' . $data['first_name'] . '!</h2>';
+    $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">We have received your quote request and our team will be in touch shortly to confirm your booking.</p>';
+    
+    if ($data['price'] > 0) {
+        $customer_message .= '<div style="background: linear-gradient(135deg, rgba(8, 145, 178, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%); border: 2px solid rgba(8, 145, 178, 0.1); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">';
+        $customer_message .= '<p style="margin: 0 0 8px 0; color: #64748b; font-size: 14px;">Estimated Price</p>';
+        $customer_message .= '<p style="margin: 0; color: #10b981; font-size: 32px; font-weight: 800;">£' . number_format($data['price'], 2) . '</p>';
+        $customer_message .= '</div>';
+    }
+    
+    $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">Service: <strong>' . $serviceInfo[$data['service']]['label'] . '</strong></p>';
+    $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">Quote Reference: <strong>' . $quote_id . '</strong></p>';
+    $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">If you have any questions, please do not hesitate to contact us.</p>';
+    $customer_message .= pgc_get_email_footer();
+    
+    $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ProGreenClean <' . $from_email . '>'];
+    wp_mail($data['email'], $customer_subject, $customer_message, $headers);
+    
+    // Admin Email
+    $admin_subject = 'New Quote Request: ' . $quote_id;
+    $admin_message = pgc_get_email_header();
+    $admin_message .= '<h2 style="color: #0891b2; margin-top: 0;">New Quote Request</h2>';
+    $admin_message .= '<table style="width: 100%; border-collapse: collapse;">';
+    $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Quote ID</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: 600;">' . $quote_id . '</td></tr>';
+    $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Service</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">' . $serviceInfo[$data['service']]['label'] . '</td></tr>';
+    if ($data['price'] > 0) {
+        $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Price</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #10b981;">£' . number_format($data['price'], 2) . '</td></tr>';
+    }
+    $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Customer</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">' . $data['first_name'] . ' ' . $data['last_name'] . '</td></tr>';
+    $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Email</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">' . $data['email'] . '</td></tr>';
+    $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Phone</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">' . $data['phone'] . '</td></tr>';
+    $admin_message .= '<tr><td style="padding: 8px 0; color: #64748b;">Address</td><td style="padding: 8px 0;">' . nl2br($data['address']) . '<br>' . $data['postcode'] . '</td></tr>';
+    $admin_message .= '</table>';
+    
+    if (!empty($quote_summary)) {
+        $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Quote Details</h3>';
+        $admin_message .= '<pre style="background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: monospace;">' . nl2br($quote_summary) . '</pre>';
+    }
+    
+    if (!empty($data['notes'])) {
+        $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Additional Notes</h3>';
+        $admin_message .= '<p style="color: #475569;">' . nl2br($data['notes']) . '</p>';
+    }
+    
+    $admin_message .= pgc_get_email_footer();
+    
+    wp_mail($admin_email, $admin_subject, $admin_message, $headers);
+    
+    wp_send_json_success(['quote_id' => $quote_id]);
+}
