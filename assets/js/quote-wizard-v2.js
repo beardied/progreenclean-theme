@@ -37,6 +37,8 @@
             if (stepId === 'service_selection') continue;
             
             const stepLabels = {
+                'win_internal_external': 'Service type',
+                'win_frequency': 'Frequency',
                 'win_prop_type': 'Property type',
                 'win_bedrooms': 'Bedrooms',
                 'win_extension': 'Extension',
@@ -110,7 +112,7 @@
             question: 'Select a Service',
             type: 'single',
             options: [
-                { value: 'window-cleaning', label: 'Window Cleaning', next: 'win_prop_type' },
+                { value: 'window-cleaning', label: 'Window Cleaning', next: 'win_internal_external' },
                 { value: 'gutter-cleaning', label: 'Gutter Cleaning', next: 'gut_prop_type' },
                 { value: 'domestic-cleaning', label: 'Domestic Cleaning', next: 'dom_type' },
                 { value: 'end-of-tenancy', label: 'Deep Clean/End of Tenancy Cleaning', next: 'eot_prop_type' },
@@ -125,6 +127,25 @@
         },
         
         // Window Cleaning Flow
+        'win_internal_external': {
+            question: 'Internal or External?',
+            type: 'single',
+            options: [
+                { value: 'external', label: 'External Only', next: 'win_frequency' },
+                { value: 'internal', label: 'Internal Only', next: 'win_frequency' },
+                { value: 'both', label: 'Both Internal and External', next: 'win_frequency' }
+            ]
+        },
+        'win_frequency': {
+            question: 'Frequency required?',
+            type: 'single',
+            options: [
+                { value: 'one-off', label: 'One Off', next: 'win_prop_type' },
+                { value: '4-weekly', label: '4 Weekly', next: 'win_prop_type' },
+                { value: '8-weekly', label: '8 Weekly', next: 'win_prop_type' },
+                { value: '12-weekly', label: '12 Weekly', next: 'win_prop_type' }
+            ]
+        },
         'win_prop_type': {
             question: 'What type of property do you have?',
             type: 'single',
@@ -142,11 +163,10 @@
             type: 'single',
             priceField: true,
             options: [
-                { value: '1-2', label: '1-2 Bedrooms', priceKey: 'ow_win_base_1_2', next: 'win_extension' },
-                { value: '3', label: '3 Bedrooms', priceKey: 'ow_win_base_3', next: 'win_extension' },
-                { value: '4', label: '4 Bedrooms', priceKey: 'ow_win_base_4', next: 'win_extension' },
-                { value: '5', label: '5 Bedrooms', priceKey: 'ow_win_base_5', next: 'win_extension' },
-                { value: '6+', label: '6+ Bedrooms', priceKey: 'ow_win_base_6plus', next: 'win_extension' }
+                { value: '2', label: '2 Bedrooms', priceKey: 'ow_win_2bed', next: 'win_extension' },
+                { value: '3', label: '3 Bedrooms', priceKey: 'ow_win_3bed', next: 'win_extension' },
+                { value: '4', label: '4 Bedrooms', priceKey: 'ow_win_4bed', next: 'win_extension' },
+                { value: '5', label: '5 Bedrooms', priceKey: 'ow_win_5bed', next: 'win_extension' }
             ]
         },
         'win_extension': {
@@ -154,7 +174,7 @@
             type: 'single',
             priceField: true,
             options: [
-                { value: 'yes', label: 'Yes', priceKey: 'ow_win_addon_extension', next: 'win_skylights_check' },
+                { value: 'yes', label: 'Yes', priceKey: 'ow_win_addon_ext', next: 'win_skylights_check' },
                 { value: 'no', label: 'No', next: 'win_skylights_check' }
             ]
         },
@@ -168,21 +188,15 @@
         },
         'win_skylights_qty': {
             question: 'How many sky lights does your property have?',
-            type: 'single',
-            priceField: true,
-            options: [
-                { value: '1', label: '1', priceKey: 'ow_win_skylight_1', next: 'win_conservatory_check' },
-                { value: '2', label: '2', priceKey: 'ow_win_skylight_2', next: 'win_conservatory_check' },
-                { value: '3', label: '3', priceKey: 'ow_win_skylight_3', next: 'win_conservatory_check' },
-                { value: '4+', label: '4+', priceKey: 'ow_win_skylight_4plus', next: 'win_conservatory_check' }
-            ]
+            type: 'number',
+            priceKey: 'ow_win_skylight_unit',
+            next: 'win_conservatory_check'
         },
         'win_conservatory_check': {
             question: 'Does your property have a conservatory?',
             type: 'single',
-            priceField: true,
             options: [
-                { value: 'yes', label: 'Yes', priceKey: 'ow_win_addon_conservatory', next: 'win_cons_roof' },
+                { value: 'yes', label: 'Yes', next: 'win_cons_roof' },
                 { value: 'no', label: 'No', next: 'win_velux_check' }
             ]
         },
@@ -274,12 +288,18 @@
         'dom_type': {
             question: 'Cleaning type?',
             type: 'single',
-            priceField: true,
             options: [
-                { value: 'weekly', label: 'Weekly', priceKey: 'ow_dom_hourly_rate', next: 'dom_prop_type' },
-                { value: 'fortnightly', label: 'Fortnightly', priceKey: 'ow_dom_hourly_rate', next: 'dom_prop_type' },
-                { value: 'monthly', label: 'Monthly', priceKey: 'ow_dom_hourly_rate', next: 'dom_prop_type' },
-                { value: 'one-off', label: 'One Off Deep Clean', priceKey: 'ow_dom_deep_base', next: 'dom_prop_type' }
+                { value: 'weekly', label: 'Weekly', next: 'dom_prop_type' },
+                { value: 'fortnightly', label: 'Fortnightly', next: 'dom_prop_type' },
+                { value: 'monthly', label: 'Monthly', next: 'dom_prop_type' },
+                { value: 'one-off-deep', label: 'One Off Deep Clean', next: 'dom_deep_redirect' }
+            ]
+        },
+        'dom_deep_redirect': {
+            question: 'Deep Clean Selected',
+            type: 'single',
+            options: [
+                { value: 'continue', label: 'Continue to Deep Clean Quote →', next: 'eot_prop_type' }
             ]
         },
         'dom_prop_type': {
@@ -597,10 +617,16 @@
     }
     
     function calculateAndShowQuote() {
-        const priceKeys = [];
-        for (const key in answers) {
-            if (answers[key].priceKey) {
-                priceKeys.push(answers[key].priceKey);
+        // For window cleaning, we don't use priceKeys - server calculates based on frequency/bedrooms
+        // For other services, collect price keys
+        const service = answers['service_selection']?.value || '';
+        let priceKeys = [];
+        
+        if (service !== 'window-cleaning') {
+            for (const key in answers) {
+                if (answers[key].priceKey) {
+                    priceKeys.push(answers[key].priceKey);
+                }
             }
         }
         
@@ -610,7 +636,7 @@
             data: {
                 action: 'pgc_calculate_quote_v3',
                 nonce: pgc_ajax.nonce,
-                service: answers['service_selection'].value,
+                service: service,
                 price_keys: priceKeys,
                 answers: JSON.stringify(answers)
             },

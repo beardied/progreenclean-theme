@@ -8,22 +8,49 @@ if (!defined('ABSPATH')) exit;
 
 // Pricing sections configuration
 $pgc_pricing_sections = [
-    'Window Cleaning' => [
-        'description' => 'Exterior window cleaning with optional add-ons',
+    'Window Cleaning - Base Prices' => [
+        'description' => 'Base prices by bedroom count and frequency (rows = bedrooms, columns = frequency)',
+        'type' => 'table',
+        'headers' => ['Bedrooms', 'One-Off', '4 Weekly', '8 Weekly', '12 Weekly'],
+        'rows' => [
+            ['label' => '2 Bedrooms', 'keys' => ['ow_win_2bed_oneoff', 'ow_win_2bed_4week', 'ow_win_2bed_8week', 'ow_win_2bed_12week']],
+            ['label' => '3 Bedrooms', 'keys' => ['ow_win_3bed_oneoff', 'ow_win_3bed_4week', 'ow_win_3bed_8week', 'ow_win_3bed_12week']],
+            ['label' => '4 Bedrooms', 'keys' => ['ow_win_4bed_oneoff', 'ow_win_4bed_4week', 'ow_win_4bed_8week', 'ow_win_4bed_12week']],
+            ['label' => '5 Bedrooms', 'keys' => ['ow_win_5bed_oneoff', 'ow_win_5bed_4week', 'ow_win_5bed_8week', 'ow_win_5bed_12week']],
+        ]
+    ],
+    'Window Cleaning - First Clean Settings' => [
+        'description' => 'First clean percentage and frequency application settings',
+        'type' => 'settings',
         'fields' => [
-            ['key' => 'ow_win_base_1_2', 'label' => '1-2 Bedroom Base Price', 'type' => 'price'],
-            ['key' => 'ow_win_base_3', 'label' => '3 Bedroom Base Price', 'type' => 'price'],
-            ['key' => 'ow_win_base_4', 'label' => '4 Bedroom Base Price', 'type' => 'price'],
-            ['key' => 'ow_win_base_5', 'label' => '5 Bedroom Base Price', 'type' => 'price'],
-            ['key' => 'ow_win_base_6plus', 'label' => '6+ Bedroom Base Price', 'type' => 'price'],
-            ['key' => 'ow_win_addon_extension', 'label' => 'Add-on: Extension', 'type' => 'price'],
-            ['key' => 'ow_win_addon_conservatory', 'label' => 'Add-on: Conservatory', 'type' => 'price'],
-            ['key' => 'ow_win_addon_cons_roof', 'label' => 'Add-on: Conservatory Roof', 'type' => 'price'],
-            ['key' => 'ow_win_skylight_1', 'label' => 'Skylight: 1', 'type' => 'price'],
-            ['key' => 'ow_win_skylight_2', 'label' => 'Skylight: 2', 'type' => 'price'],
-            ['key' => 'ow_win_skylight_3', 'label' => 'Skylight: 3', 'type' => 'price'],
-            ['key' => 'ow_win_skylight_4plus', 'label' => 'Skylight: 4+', 'type' => 'price'],
-            ['key' => 'ow_win_velux_unit_price', 'label' => 'Velux Window (per unit)', 'type' => 'price'],
+            ['key' => 'ow_win_first_clean_pct', 'label' => 'First Clean Percentage (e.g., 50 for +50%)', 'type' => 'number'],
+            ['key' => 'ow_win_first_clean_4week', 'label' => 'Apply to 4 Weekly', 'type' => 'checkbox'],
+            ['key' => 'ow_win_first_clean_8week', 'label' => 'Apply to 8 Weekly', 'type' => 'checkbox'],
+            ['key' => 'ow_win_first_clean_12week', 'label' => 'Apply to 12 Weekly', 'type' => 'checkbox'],
+        ]
+    ],
+    'Window Cleaning - Internal Windows' => [
+        'description' => 'Internal window pricing settings',
+        'type' => 'settings',
+        'fields' => [
+            ['key' => 'ow_win_internal_markup', 'label' => 'Internal Windows Markup Percentage (e.g., 25 for +25%)', 'type' => 'number'],
+        ]
+    ],
+    'Window Cleaning - Addons (by Bedroom)' => [
+        'description' => 'Addon prices vary by bedroom count',
+        'type' => 'table',
+        'headers' => ['Addon', '2 Bed', '3 Bed', '4 Bed', '5 Bed'],
+        'rows' => [
+            ['label' => 'Extension', 'keys' => ['ow_win_ext_2bed', 'ow_win_ext_3bed', 'ow_win_ext_4bed', 'ow_win_ext_5bed']],
+            ['label' => 'Conservatory', 'keys' => ['ow_win_cons_2bed', 'ow_win_cons_3bed', 'ow_win_cons_4bed', 'ow_win_cons_5bed']],
+        ]
+    ],
+    'Window Cleaning - Other Addons' => [
+        'description' => 'Additional window cleaning services',
+        'fields' => [
+            ['key' => 'ow_win_addon_cons_roof', 'label' => 'Conservatory Roof', 'type' => 'price'],
+            ['key' => 'ow_win_skylight_unit', 'label' => 'Skylight (per unit)', 'type' => 'price'],
+            ['key' => 'ow_win_velux_unit', 'label' => 'Velux Window (per unit)', 'type' => 'price'],
         ]
     ],
     'Gutter Cleaning' => [
@@ -44,7 +71,6 @@ $pgc_pricing_sections = [
         'description' => 'Regular domestic cleaning services',
         'fields' => [
             ['key' => 'ow_dom_hourly_rate', 'label' => 'Hourly Rate', 'type' => 'price'],
-            ['key' => 'ow_dom_deep_base', 'label' => 'Deep Clean Base', 'type' => 'price'],
         ]
     ],
     'End of Tenancy' => [
@@ -101,20 +127,52 @@ $pgc_pricing_sections = [
 
 // Default pricing values
 $pgc_default_pricing = [
-    // Window Cleaning
-    'ow_win_base_1_2' => 24.50,
-    'ow_win_base_3' => 27.50,
-    'ow_win_base_4' => 31.50,
-    'ow_win_base_5' => 39.50,
-    'ow_win_base_6plus' => 45.00,
-    'ow_win_addon_extension' => 6.00,
-    'ow_win_addon_conservatory' => 10.00,
+    // Window Cleaning - 2 Bedroom
+    'ow_win_2bed_oneoff' => 36.75,
+    'ow_win_2bed_4week' => 24.50,
+    'ow_win_2bed_8week' => 26.50,
+    'ow_win_2bed_12week' => 28.50,
+    
+    // Window Cleaning - 3 Bedroom
+    'ow_win_3bed_oneoff' => 41.25,
+    'ow_win_3bed_4week' => 27.50,
+    'ow_win_3bed_8week' => 29.50,
+    'ow_win_3bed_12week' => 32.50,
+    
+    // Window Cleaning - 4 Bedroom
+    'ow_win_4bed_oneoff' => 47.25,
+    'ow_win_4bed_4week' => 31.50,
+    'ow_win_4bed_8week' => 33.50,
+    'ow_win_4bed_12week' => 35.50,
+    
+    // Window Cleaning - 5 Bedroom
+    'ow_win_5bed_oneoff' => 59.25,
+    'ow_win_5bed_4week' => 39.50,
+    'ow_win_5bed_8week' => 41.50,
+    'ow_win_5bed_12week' => 43.50,
+    
+    // Window Cleaning - Settings
+    'ow_win_first_clean_pct' => 50,
+    'ow_win_first_clean_4week' => 0, // 0 = unchecked, 1 = checked
+    'ow_win_first_clean_8week' => 0,
+    'ow_win_first_clean_12week' => 0,
+    'ow_win_internal_markup' => 25,
+    
+    // Window Cleaning - Addons by Bedroom
+    'ow_win_ext_2bed' => 6.00,
+    'ow_win_ext_3bed' => 6.00,
+    'ow_win_ext_4bed' => 6.00,
+    'ow_win_ext_5bed' => 6.00,
+    
+    'ow_win_cons_2bed' => 10.00,
+    'ow_win_cons_3bed' => 10.00,
+    'ow_win_cons_4bed' => 10.00,
+    'ow_win_cons_5bed' => 14.00,
+    
+    // Window Cleaning - Other Addons
     'ow_win_addon_cons_roof' => 60.00,
-    'ow_win_skylight_1' => 6.00,
-    'ow_win_skylight_2' => 12.00,
-    'ow_win_skylight_3' => 18.00,
-    'ow_win_skylight_4plus' => 24.00,
-    'ow_win_velux_unit_price' => 4.00,
+    'ow_win_skylight_unit' => 6.00,
+    'ow_win_velux_unit' => 4.00,
     
     // Gutter Cleaning
     'ow_gut_base_detached' => 110.00,
@@ -129,7 +187,6 @@ $pgc_default_pricing = [
     
     // Domestic Cleaning
     'ow_dom_hourly_rate' => 25.00,
-    'ow_dom_deep_base' => 150.00,
     
     // End of Tenancy
     'ow_eot_studio' => 190.00,

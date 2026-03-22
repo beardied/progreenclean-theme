@@ -806,10 +806,29 @@ function pgc_render_pricing_page_v3() {
     if (isset($_POST['pgc_save_pricing']) && check_admin_referer('pgc_pricing_nonce')) {
         global $pgc_pricing_sections;
         foreach ($pgc_pricing_sections as $section_name => $section) {
-            foreach ($section['fields'] as $field) {
-                $key = $field['key'];
-                if (isset($_POST['prices'][$key])) {
-                    update_option('pgc_price_' . $key, floatval($_POST['prices'][$key]));
+            // Handle regular fields
+            if (isset($section['fields'])) {
+                foreach ($section['fields'] as $field) {
+                    $key = $field['key'];
+                    if (isset($_POST['prices'][$key])) {
+                        update_option('pgc_price_' . $key, floatval($_POST['prices'][$key]));
+                    }
+                    if (isset($field['type']) && $field['type'] === 'checkbox') {
+                        $checked = isset($_POST['prices'][$key]) ? 1 : 0;
+                        update_option('pgc_price_' . $key, $checked);
+                    }
+                }
+            }
+            // Handle table rows
+            if (isset($section['rows'])) {
+                foreach ($section['rows'] as $row) {
+                    if (isset($row['keys'])) {
+                        foreach ($row['keys'] as $key) {
+                            if (isset($_POST['prices'][$key])) {
+                                update_option('pgc_price_' . $key, floatval($_POST['prices'][$key]));
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -825,7 +844,10 @@ function pgc_render_pricing_page_v3() {
         <form method="post">
             <?php wp_nonce_field('pgc_pricing_nonce'); ?>
             
-            <?php foreach ($pgc_pricing_sections as $section_name => $section) : ?>
+            <?php foreach ($pgc_pricing_sections as $section_name => $section) : 
+                $is_table = isset($section['type']) && $section['type'] === 'table';
+                $is_settings = isset($section['type']) && $section['type'] === 'settings';
+            ?>
             <div class="pgc-pricing-section" style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; margin-bottom: 20px;">
                 <div class="pgc-section-header" style="background: linear-gradient(135deg, #0891b2 0%, #10b981 100%); color: #fff; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="jQuery(this).next().toggle(); jQuery(this).find('.dashicons').toggleClass('dashicons-arrow-down dashicons-arrow-up');">
                     <div>
@@ -835,24 +857,75 @@ function pgc_render_pricing_page_v3() {
                     <span class="dashicons dashicons-arrow-up" style="color: #fff;"></span>
                 </div>
                 <div class="pgc-section-content" style="padding: 20px;">
-                    <table class="wp-list-table widefat striped">
-                        <thead>
-                            <tr>
-                                <th style="width: 60%;">Service / Option</th>
-                                <th>Price (£)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($section['fields'] as $field) : 
-                                $price = pgc_get_price($field['key']);
-                            ?>
-                            <tr>
-                                <td><?php echo esc_html($field['label']); ?><br><code style="font-size: 11px; color: #999;"><?php echo esc_html($field['key']); ?></code></td>
-                                <td><input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;"></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                    
+                    <?php if ($is_table && isset($section['headers'])) : ?>
+                        <!-- Table Format -->
+                        <table class="wp-list-table widefat striped">
+                            <thead>
+                                <tr>
+                                    <?php foreach ($section['headers'] as $header) : ?>
+                                        <th><?php echo esc_html($header); ?></th>
+                                    <?php endforeach; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($section['rows'] as $row) : ?>
+                                <tr>
+                                    <td><strong><?php echo esc_html($row['label']); ?></strong></td>
+                                    <?php foreach ($row['keys'] as $key) : 
+                                        $price = pgc_get_price($key);
+                                    ?>
+                                    <td>
+                                        £<input type="number" name="prices[<?php echo esc_attr($key); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 80px;">
+                                        <br><code style="font-size: 10px; color: #999;"><?php echo esc_html($key); ?></code>
+                                    </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php elseif ($is_settings && isset($section['fields'])) : ?>
+                        <!-- Settings Format -->
+                        <table class="wp-list-table widefat striped">
+                            <tbody>
+                                <?php foreach ($section['fields'] as $field) : 
+                                    $price = pgc_get_price($field['key']);
+                                ?>
+                                <tr>
+                                    <td style="width: 70%;"><?php echo esc_html($field['label']); ?><br><code style="font-size: 11px; color: #999;"><?php echo esc_html($field['key']); ?></code></td>
+                                    <td>
+                                        <?php if ($field['type'] === 'checkbox') : ?>
+                                            <input type="checkbox" name="prices[<?php echo esc_attr($field['key']); ?>]" value="1" <?php checked($price, 1); ?>>
+                                        <?php else : ?>
+                                            <input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;">
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php elseif (isset($section['fields'])) : ?>
+                        <!-- Standard Field Format -->
+                        <table class="wp-list-table widefat striped">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60%;">Service / Option</th>
+                                    <th>Price (£)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($section['fields'] as $field) : 
+                                    $price = pgc_get_price($field['key']);
+                                ?>
+                                <tr>
+                                    <td><?php echo esc_html($field['label']); ?><br><code style="font-size: 11px; color: #999;"><?php echo esc_html($field['key']); ?></code></td>
+                                    <td><input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;"></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                    
                 </div>
             </div>
             <?php endforeach; ?>
@@ -886,13 +959,124 @@ function pgc_ajax_calculate_quote_v3() {
     $total = 0;
     $breakdown = [];
     
-    // Calculate based on price keys
+    // Window Cleaning - Special Pricing Logic
+    if ($service === 'window-cleaning') {
+        $frequency = $answers['win_frequency']['value'] ?? 'one-off';
+        $bedrooms = $answers['win_bedrooms']['value'] ?? '2';
+        $internal_external = $answers['win_internal_external']['value'] ?? 'external';
+        
+        // Build base price key based on bedrooms and frequency
+        $base_key = 'ow_win_' . $bedrooms . 'bed_' . str_replace('-', '', $frequency);
+        $base_price = pgc_get_price($base_key);
+        
+        $external_price = 0;
+        $internal_price = 0;
+        
+        // Calculate external price
+        if ($internal_external === 'external' || $internal_external === 'both') {
+            $external_price = $base_price;
+        }
+        
+        // Calculate internal price (with markup)
+        if ($internal_external === 'internal' || $internal_external === 'both') {
+            $internal_markup = pgc_get_price('ow_win_internal_markup') / 100;
+            $internal_price = $base_price * (1 + $internal_markup);
+        }
+        
+        $window_subtotal = $external_price + $internal_price;
+        
+        // Add to breakdown
+        if ($internal_external === 'external') {
+            $breakdown[] = ['label' => 'External Windows (' . $bedrooms . ' bed, ' . $frequency . ')', 'price' => $external_price];
+        } elseif ($internal_external === 'internal') {
+            $breakdown[] = ['label' => 'Internal Windows (' . $bedrooms . ' bed, ' . $frequency . ')', 'price' => $internal_price];
+        } else {
+            $breakdown[] = ['label' => 'External Windows (' . $bedrooms . ' bed, ' . $frequency . ')', 'price' => $external_price];
+            $breakdown[] = ['label' => 'Internal Windows (' . $bedrooms . ' bed + ' . pgc_get_price('ow_win_internal_markup') . '%)', 'price' => $internal_price];
+        }
+        
+        $total = $window_subtotal;
+        
+        // First clean percentage (only for scheduled cleans, not one-off)
+        if ($frequency !== 'one-off') {
+            $apply_first_clean = false;
+            if ($frequency === '4-weekly' && pgc_get_price('ow_win_first_clean_4week')) {
+                $apply_first_clean = true;
+            } elseif ($frequency === '8-weekly' && pgc_get_price('ow_win_first_clean_8week')) {
+                $apply_first_clean = true;
+            } elseif ($frequency === '12-weekly' && pgc_get_price('ow_win_first_clean_12week')) {
+                $apply_first_clean = true;
+            }
+            
+            if ($apply_first_clean) {
+                $first_clean_pct = pgc_get_price('ow_win_first_clean_pct') / 100;
+                $first_clean_amount = $window_subtotal * $first_clean_pct;
+                $breakdown[] = ['label' => 'First Clean Surcharge (' . pgc_get_price('ow_win_first_clean_pct') . '%)', 'price' => $first_clean_amount];
+                $total += $first_clean_amount;
+            }
+        }
+        
+        // Addons by bedroom
+        if (isset($answers['win_extension']) && $answers['win_extension']['value'] === 'yes') {
+            $ext_key = 'ow_win_ext_' . $bedrooms . 'bed';
+            $ext_price = pgc_get_price($ext_key);
+            if ($ext_price > 0) {
+                $total += $ext_price;
+                $breakdown[] = ['label' => 'Extension (' . $bedrooms . ' bed)', 'price' => $ext_price];
+            }
+        }
+        
+        if (isset($answers['win_conservatory_check']) && $answers['win_conservatory_check']['value'] === 'yes') {
+            $cons_key = 'ow_win_cons_' . $bedrooms . 'bed';
+            $cons_price = pgc_get_price($cons_key);
+            if ($cons_price > 0) {
+                $total += $cons_price;
+                $breakdown[] = ['label' => 'Conservatory (' . $bedrooms . ' bed)', 'price' => $cons_price];
+            }
+        }
+        
+        // Other addons
+        if (isset($answers['win_cons_roof']) && $answers['win_cons_roof']['value'] === 'yes') {
+            $roof_price = pgc_get_price('ow_win_addon_cons_roof');
+            if ($roof_price > 0) {
+                $total += $roof_price;
+                $breakdown[] = ['label' => 'Conservatory Roof', 'price' => $roof_price];
+            }
+        }
+        
+        if (isset($answers['win_skylights_qty'])) {
+            $skylight_qty = intval($answers['win_skylights_qty']['value'] ?? 0);
+            if ($skylight_qty > 0) {
+                $skylight_unit = pgc_get_price('ow_win_skylight_unit');
+                $skylight_total = $skylight_qty * $skylight_unit;
+                $total += $skylight_total;
+                $breakdown[] = ['label' => 'Skylights (' . $skylight_qty . ')', 'price' => $skylight_total];
+            }
+        }
+        
+        if (isset($answers['win_velux_qty'])) {
+            $velux_qty = intval($answers['win_velux_qty']['value'] ?? 0);
+            if ($velux_qty > 0) {
+                $velux_unit = pgc_get_price('ow_win_velux_unit');
+                $velux_total = $velux_qty * $velux_unit;
+                $total += $velux_total;
+                $breakdown[] = ['label' => 'Velux Windows (' . $velux_qty . ')', 'price' => $velux_total];
+            }
+        }
+        
+        wp_send_json_success([
+            'total' => $total,
+            'breakdown' => $breakdown,
+        ]);
+        return;
+    }
+    
+    // Standard calculation for other services
     if (is_array($price_keys)) {
         foreach ($price_keys as $key) {
             $price = pgc_get_price(sanitize_text_field($key));
             if ($price > 0) {
                 $total += $price;
-                // Get label from answers
                 $label = $key;
                 foreach ($answers as $step => $answer) {
                     if (isset($answer['priceKey']) && $answer['priceKey'] === $key) {
@@ -906,16 +1090,6 @@ function pgc_ajax_calculate_quote_v3() {
     }
     
     // Special calculations for multi-unit items
-    if ($service === 'window-cleaning' && isset($answers['win_velux_qty'])) {
-        $velux_qty = intval($answers['win_velux_qty']['value'] ?? 0);
-        if ($velux_qty > 0) {
-            $unit_price = pgc_get_price('ow_win_velux_unit_price');
-            $velux_total = $velux_qty * $unit_price;
-            $total += $velux_total;
-            $breakdown[] = ['label' => 'Velux Windows (' . $velux_qty . ')', 'price' => $velux_total];
-        }
-    }
-    
     if ($service === 'end-of-tenancy' && isset($answers['eot_carpets_qty'])) {
         $carpet_qty = intval($answers['eot_carpets_qty']['value'] ?? 0);
         if ($carpet_qty > 0 && is_numeric($answers['eot_carpets_qty']['value'])) {
@@ -931,7 +1105,6 @@ function pgc_ajax_calculate_quote_v3() {
         $hours = intval($answers['dom_hours']['value'] ?? 2);
         $hourly_rate = pgc_get_price('ow_dom_hourly_rate');
         $domestic_total = $hours * $hourly_rate;
-        // Remove the base price and use calculated
         $total = $domestic_total;
         foreach ($breakdown as $i => $item) {
             if ($item['label'] === '2 Hours' || $item['label'] === '3 Hours' || $item['label'] === '4 Hours' || $item['label'] === '5+ Hours') {
@@ -1002,6 +1175,14 @@ function pgc_ajax_submit_quote_v3() {
         $customer_message .= '</div>';
     }
     
+    // Quote Summary for Customer
+    if (!empty($quote_summary)) {
+        $customer_message .= '<div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 24px 0;">';
+        $customer_message .= '<h3 style="color: #0891b2; margin-top: 0; font-size: 16px;">Quote Summary</h3>';
+        $customer_message .= '<pre style="margin: 0; font-family: inherit; font-size: 14px; line-height: 1.6; color: #475569; white-space: pre-wrap;">' . nl2br(esc_html($quote_summary)) . '</pre>';
+        $customer_message .= '</div>';
+    }
+    
     $service_display_name = ucwords(str_replace('-', ' ', $data['service']));
     $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">Service: <strong>' . esc_html($service_display_name) . '</strong></p>';
     $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">Quote Reference: <strong>' . $quote_id . '</strong></p>';
@@ -1028,28 +1209,32 @@ function pgc_ajax_submit_quote_v3() {
     $admin_message .= '<tr><td style="padding: 8px 0; color: #64748b;">Address</td><td style="padding: 8px 0;">' . nl2br($data['address']) . '<br>' . $data['postcode'] . '</td></tr>';
     $admin_message .= '</table>';
     
-    if (!empty($quote_summary)) {
-        $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Quote Details</h3>';
-        $admin_message .= '<pre style="background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: inherit; line-height: 1.6;">' . nl2br(esc_html($quote_summary)) . '</pre>';
-    }
-    
-    // Price Breakdown Table for Admin
-    if (!empty($data['breakdown'])) {
-        $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Price Breakdown</h3>';
-        $admin_message .= '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
-        $admin_message .= '<thead><tr style="background: #f1f5f9;"><th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">Item</th><th style="padding: 10px; text-align: right; border-bottom: 2px solid #cbd5e1;">Price</th></tr></thead>';
-        $admin_message .= '<tbody>';
-        foreach ($data['breakdown'] as $item) {
-            $admin_message .= '<tr>';
-            $admin_message .= '<td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">' . esc_html($item['label']) . '</td>';
-            $admin_message .= '<td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">£' . number_format($item['price'], 2) . '</td>';
-            $admin_message .= '</tr>';
+    // Merged Quote Details with Price Breakdown
+    if (!empty($quote_summary) || !empty($data['breakdown'])) {
+        $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Quote Summary & Price Breakdown</h3>';
+        
+        // Show quote summary
+        if (!empty($quote_summary)) {
+            $admin_message .= '<pre style="background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: inherit; line-height: 1.6; margin-bottom: 20px;">' . nl2br(esc_html($quote_summary)) . '</pre>';
         }
-        $admin_message .= '<tr style="background: #f8fafc; font-weight: 600;">';
-        $admin_message .= '<td style="padding: 10px;">Total</td>';
-        $admin_message .= '<td style="padding: 10px; text-align: right; color: #10b981;">£' . number_format($data['price'], 2) . '</td>';
-        $admin_message .= '</tr>';
-        $admin_message .= '</tbody></table>';
+        
+        // Show detailed price breakdown
+        if (!empty($data['breakdown'])) {
+            $admin_message .= '<table style="width: 100%; border-collapse: collapse;">';
+            $admin_message .= '<thead><tr style="background: #f1f5f9;"><th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">Item</th><th style="padding: 10px; text-align: right; border-bottom: 2px solid #cbd5e1;">Price</th></tr></thead>';
+            $admin_message .= '<tbody>';
+            foreach ($data['breakdown'] as $item) {
+                $admin_message .= '<tr>';
+                $admin_message .= '<td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">' . esc_html($item['label']) . '</td>';
+                $admin_message .= '<td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">£' . number_format($item['price'], 2) . '</td>';
+                $admin_message .= '</tr>';
+            }
+            $admin_message .= '<tr style="background: #f8fafc; font-weight: 600;">';
+            $admin_message .= '<td style="padding: 10px;">Total</td>';
+            $admin_message .= '<td style="padding: 10px; text-align: right; color: #10b981;">£' . number_format($data['price'], 2) . '</td>';
+            $admin_message .= '</tr>';
+            $admin_message .= '</tbody></table>';
+        }
     }
     
     if (!empty($data['notes'])) {
