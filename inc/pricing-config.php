@@ -8,15 +8,15 @@ if (!defined('ABSPATH')) exit;
 
 // Pricing sections configuration
 $pgc_pricing_sections = [
-    'Window Cleaning - Base Prices' => [
-        'description' => 'Base prices by bedroom count and frequency (rows = bedrooms, columns = frequency)',
+    'Window Cleaning - Base Prices & Addons' => [
+        'description' => 'Base prices by bedroom, frequency, and addon options (all prices per bedroom)',
         'type' => 'table',
-        'headers' => ['Bedrooms', 'One-Off', '4 Weekly', '8 Weekly', '12 Weekly'],
+        'headers' => ['Bedrooms', 'One-Off', '4 Weekly', '8 Weekly', '12 Weekly', 'Extension', 'Conservatory'],
         'rows' => [
-            ['label' => '2 Bedrooms', 'keys' => ['ow_win_2bed_oneoff', 'ow_win_2bed_4week', 'ow_win_2bed_8week', 'ow_win_2bed_12week']],
-            ['label' => '3 Bedrooms', 'keys' => ['ow_win_3bed_oneoff', 'ow_win_3bed_4week', 'ow_win_3bed_8week', 'ow_win_3bed_12week']],
-            ['label' => '4 Bedrooms', 'keys' => ['ow_win_4bed_oneoff', 'ow_win_4bed_4week', 'ow_win_4bed_8week', 'ow_win_4bed_12week']],
-            ['label' => '5 Bedrooms', 'keys' => ['ow_win_5bed_oneoff', 'ow_win_5bed_4week', 'ow_win_5bed_8week', 'ow_win_5bed_12week']],
+            ['label' => '2 Bedrooms', 'keys' => ['ow_win_2bed_oneoff', 'ow_win_2bed_4week', 'ow_win_2bed_8week', 'ow_win_2bed_12week', 'ow_win_ext_2bed', 'ow_win_cons_2bed']],
+            ['label' => '3 Bedrooms', 'keys' => ['ow_win_3bed_oneoff', 'ow_win_3bed_4week', 'ow_win_3bed_8week', 'ow_win_3bed_12week', 'ow_win_ext_3bed', 'ow_win_cons_3bed']],
+            ['label' => '4 Bedrooms', 'keys' => ['ow_win_4bed_oneoff', 'ow_win_4bed_4week', 'ow_win_4bed_8week', 'ow_win_4bed_12week', 'ow_win_ext_4bed', 'ow_win_cons_4bed']],
+            ['label' => '5 Bedrooms', 'keys' => ['ow_win_5bed_oneoff', 'ow_win_5bed_4week', 'ow_win_5bed_8week', 'ow_win_5bed_12week', 'ow_win_ext_5bed', 'ow_win_cons_5bed']],
         ]
     ],
     'Window Cleaning - First Clean Settings' => [
@@ -36,19 +36,24 @@ $pgc_pricing_sections = [
             ['key' => 'ow_win_internal_markup', 'label' => 'Internal Windows Markup Percentage (e.g., 25 for +25%)', 'type' => 'number'],
         ]
     ],
-    'Window Cleaning - Addons (by Bedroom)' => [
-        'description' => 'Addon prices vary by bedroom count',
-        'type' => 'table',
-        'headers' => ['Addon', '2 Bed', '3 Bed', '4 Bed', '5 Bed'],
-        'rows' => [
-            ['label' => 'Extension', 'keys' => ['ow_win_ext_2bed', 'ow_win_ext_3bed', 'ow_win_ext_4bed', 'ow_win_ext_5bed']],
-            ['label' => 'Conservatory', 'keys' => ['ow_win_cons_2bed', 'ow_win_cons_3bed', 'ow_win_cons_4bed', 'ow_win_cons_5bed']],
+    'Window Cleaning - Conservatory Roof' => [
+        'description' => 'Conservatory roof size definitions and pricing (Internal & External)',
+        'type' => 'settings',
+        'fields' => [
+            ['key' => 'ow_win_cons_roof_small_size', 'label' => 'Small Size Definition (e.g., 3x3m)', 'type' => 'text'],
+            ['key' => 'ow_win_cons_roof_small_int', 'label' => 'Small - Internal Price', 'type' => 'price'],
+            ['key' => 'ow_win_cons_roof_small_ext', 'label' => 'Small - External Price', 'type' => 'price'],
+            ['key' => 'ow_win_cons_roof_medium_size', 'label' => 'Medium Size Definition (e.g., 4x4m / Lean to)', 'type' => 'text'],
+            ['key' => 'ow_win_cons_roof_medium_int', 'label' => 'Medium - Internal Price', 'type' => 'price'],
+            ['key' => 'ow_win_cons_roof_medium_ext', 'label' => 'Medium - External Price', 'type' => 'price'],
+            ['key' => 'ow_win_cons_roof_large_size', 'label' => 'Large Size Definition (e.g., 5x5m)', 'type' => 'text'],
+            ['key' => 'ow_win_cons_roof_large_int', 'label' => 'Large - Internal Price', 'type' => 'price'],
+            ['key' => 'ow_win_cons_roof_large_ext', 'label' => 'Large - External Price', 'type' => 'price'],
         ]
     ],
     'Window Cleaning - Other Addons' => [
         'description' => 'Additional window cleaning services',
         'fields' => [
-            ['key' => 'ow_win_addon_cons_roof', 'label' => 'Conservatory Roof', 'type' => 'price'],
             ['key' => 'ow_win_skylight_unit', 'label' => 'Skylight (per unit)', 'type' => 'price'],
             ['key' => 'ow_win_velux_unit', 'label' => 'Velux Window (per unit)', 'type' => 'price'],
         ]
@@ -132,45 +137,52 @@ $pgc_default_pricing = [
     'ow_win_2bed_4week' => 24.50,
     'ow_win_2bed_8week' => 26.50,
     'ow_win_2bed_12week' => 28.50,
+    'ow_win_ext_2bed' => 6.00,
+    'ow_win_cons_2bed' => 10.00,
     
     // Window Cleaning - 3 Bedroom
     'ow_win_3bed_oneoff' => 41.25,
     'ow_win_3bed_4week' => 27.50,
     'ow_win_3bed_8week' => 29.50,
     'ow_win_3bed_12week' => 32.50,
+    'ow_win_ext_3bed' => 6.00,
+    'ow_win_cons_3bed' => 10.00,
     
     // Window Cleaning - 4 Bedroom
     'ow_win_4bed_oneoff' => 47.25,
     'ow_win_4bed_4week' => 31.50,
     'ow_win_4bed_8week' => 33.50,
     'ow_win_4bed_12week' => 35.50,
+    'ow_win_ext_4bed' => 6.00,
+    'ow_win_cons_4bed' => 10.00,
     
     // Window Cleaning - 5 Bedroom
     'ow_win_5bed_oneoff' => 59.25,
     'ow_win_5bed_4week' => 39.50,
     'ow_win_5bed_8week' => 41.50,
     'ow_win_5bed_12week' => 43.50,
+    'ow_win_ext_5bed' => 6.00,
+    'ow_win_cons_5bed' => 14.00,
     
     // Window Cleaning - Settings
     'ow_win_first_clean_pct' => 50,
-    'ow_win_first_clean_4week' => 0, // 0 = unchecked, 1 = checked
+    'ow_win_first_clean_4week' => 0,
     'ow_win_first_clean_8week' => 0,
     'ow_win_first_clean_12week' => 0,
     'ow_win_internal_markup' => 25,
     
-    // Window Cleaning - Addons by Bedroom
-    'ow_win_ext_2bed' => 6.00,
-    'ow_win_ext_3bed' => 6.00,
-    'ow_win_ext_4bed' => 6.00,
-    'ow_win_ext_5bed' => 6.00,
-    
-    'ow_win_cons_2bed' => 10.00,
-    'ow_win_cons_3bed' => 10.00,
-    'ow_win_cons_4bed' => 10.00,
-    'ow_win_cons_5bed' => 14.00,
+    // Window Cleaning - Conservatory Roof Sizes & Prices
+    'ow_win_cons_roof_small_size' => '3x3m',
+    'ow_win_cons_roof_small_int' => 30.00,
+    'ow_win_cons_roof_small_ext' => 60.00,
+    'ow_win_cons_roof_medium_size' => '4x4m / Lean to',
+    'ow_win_cons_roof_medium_int' => 60.00,
+    'ow_win_cons_roof_medium_ext' => 80.00,
+    'ow_win_cons_roof_large_size' => '5x5m',
+    'ow_win_cons_roof_large_int' => 90.00,
+    'ow_win_cons_roof_large_ext' => 110.00,
     
     // Window Cleaning - Other Addons
-    'ow_win_addon_cons_roof' => 60.00,
     'ow_win_skylight_unit' => 6.00,
     'ow_win_velux_unit' => 4.00,
     
@@ -237,13 +249,25 @@ function pgc_get_price($key) {
 }
 
 /**
+ * Get text option for a given key
+ */
+function pgc_get_text_option($key) {
+    $value = get_option('pgc_price_' . $key, null);
+    if ($value === null) {
+        global $pgc_default_pricing;
+        $value = $pgc_default_pricing[$key] ?? '';
+    }
+    return sanitize_text_field($value);
+}
+
+/**
  * Initialize default pricing on theme activation
  */
 function pgc_init_pricing() {
     global $pgc_default_pricing;
-    foreach ($pgc_default_pricing as $key => $price) {
+    foreach ($pgc_default_pricing as $key => $value) {
         if (get_option('pgc_price_' . $key, null) === null) {
-            update_option('pgc_price_' . $key, $price);
+            update_option('pgc_price_' . $key, $value);
         }
     }
 }

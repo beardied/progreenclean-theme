@@ -810,12 +810,16 @@ function pgc_render_pricing_page_v3() {
             if (isset($section['fields'])) {
                 foreach ($section['fields'] as $field) {
                     $key = $field['key'];
-                    if (isset($_POST['prices'][$key])) {
-                        update_option('pgc_price_' . $key, floatval($_POST['prices'][$key]));
-                    }
-                    if (isset($field['type']) && $field['type'] === 'checkbox') {
+                    $type = $field['type'] ?? 'price';
+                    
+                    if ($type === 'checkbox') {
                         $checked = isset($_POST['prices'][$key]) ? 1 : 0;
                         update_option('pgc_price_' . $key, $checked);
+                    } elseif ($type === 'text') {
+                        $text_value = sanitize_text_field($_POST['prices'][$key] ?? '');
+                        update_option('pgc_price_' . $key, $text_value);
+                    } elseif (isset($_POST['prices'][$key])) {
+                        update_option('pgc_price_' . $key, floatval($_POST['prices'][$key]));
                     }
                 }
             }
@@ -876,8 +880,7 @@ function pgc_render_pricing_page_v3() {
                                         $price = pgc_get_price($key);
                                     ?>
                                     <td>
-                                        £<input type="number" name="prices[<?php echo esc_attr($key); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 80px;">
-                                        <br><code style="font-size: 10px; color: #999;"><?php echo esc_html($key); ?></code>
+                                        £<input type="number" name="prices[<?php echo esc_attr($key); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 70px;">
                                     </td>
                                     <?php endforeach; ?>
                                 </tr>
@@ -889,15 +892,20 @@ function pgc_render_pricing_page_v3() {
                         <table class="wp-list-table widefat striped">
                             <tbody>
                                 <?php foreach ($section['fields'] as $field) : 
-                                    $price = pgc_get_price($field['key']);
+                                    $field_type = $field['type'] ?? 'price';
+                                    $value = ($field_type === 'text') 
+                                        ? pgc_get_text_option($field['key']) 
+                                        : pgc_get_price($field['key']);
                                 ?>
                                 <tr>
-                                    <td style="width: 70%;"><?php echo esc_html($field['label']); ?><br><code style="font-size: 11px; color: #999;"><?php echo esc_html($field['key']); ?></code></td>
+                                    <td style="width: 60%;"><?php echo esc_html($field['label']); ?></td>
                                     <td>
-                                        <?php if ($field['type'] === 'checkbox') : ?>
-                                            <input type="checkbox" name="prices[<?php echo esc_attr($field['key']); ?>]" value="1" <?php checked($price, 1); ?>>
+                                        <?php if ($field_type === 'checkbox') : ?>
+                                            <input type="checkbox" name="prices[<?php echo esc_attr($field['key']); ?>]" value="1" <?php checked($value, 1); ?>>
+                                        <?php elseif ($field_type === 'text') : ?>
+                                            <input type="text" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($value); ?>" style="width: 150px;">
                                         <?php else : ?>
-                                            <input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;">
+                                            £<input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($value); ?>" step="0.01" min="0" style="width: 100px;">
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -918,8 +926,8 @@ function pgc_render_pricing_page_v3() {
                                     $price = pgc_get_price($field['key']);
                                 ?>
                                 <tr>
-                                    <td><?php echo esc_html($field['label']); ?><br><code style="font-size: 11px; color: #999;"><?php echo esc_html($field['key']); ?></code></td>
-                                    <td><input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;"></td>
+                                    <td><?php echo esc_html($field['label']); ?></td>
+                                    <td>£<input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;"></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -1035,12 +1043,34 @@ function pgc_ajax_calculate_quote_v3() {
             }
         }
         
-        // Other addons
-        if (isset($answers['win_cons_roof']) && $answers['win_cons_roof']['value'] === 'yes') {
-            $roof_price = pgc_get_price('ow_win_addon_cons_roof');
-            if ($roof_price > 0) {
-                $total += $roof_price;
-                $breakdown[] = ['label' => 'Conservatory Roof', 'price' => $roof_price];
+        // Conservatory Roof - Size based with Internal/External pricing
+        if (isset($answers['win_cons_roof']) && $answers['win_cons_roof']['value'] === 'yes' && isset($answers['win_cons_size'])) {
+            $cons_size = $answers['win_cons_size']['value']; // small, medium, large
+            $roof_external_price = 0;
+            $roof_internal_price = 0;
+            
+            // Get size label for display
+            $size_label = ucfirst($cons_size);
+            $size_def = pgc_get_text_option('ow_win_cons_roof_' . $cons_size . '_size');
+            if ($size_def) {
+                $size_label .= ' (' . $size_def . ')';
+            }
+            
+            // Calculate based on internal/external selection
+            if ($internal_external === 'external' || $internal_external === 'both') {
+                $roof_external_price = pgc_get_price('ow_win_cons_roof_' . $cons_size . '_ext');
+            }
+            if ($internal_external === 'internal' || $internal_external === 'both') {
+                $roof_internal_price = pgc_get_price('ow_win_cons_roof_' . $cons_size . '_int');
+            }
+            
+            if ($roof_external_price > 0) {
+                $total += $roof_external_price;
+                $breakdown[] = ['label' => 'Conservatory Roof External - ' . $size_label, 'price' => $roof_external_price];
+            }
+            if ($roof_internal_price > 0) {
+                $total += $roof_internal_price;
+                $breakdown[] = ['label' => 'Conservatory Roof Internal - ' . $size_label, 'price' => $roof_internal_price];
             }
         }
         

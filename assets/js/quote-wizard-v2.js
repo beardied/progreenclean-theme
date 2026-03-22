@@ -45,6 +45,7 @@
                 'win_skylights_check': 'Sky lights',
                 'win_skylights_qty': 'Number of sky lights',
                 'win_conservatory_check': 'Conservatory',
+                'win_cons_size': 'Conservatory size',
                 'win_cons_roof': 'Conservatory roof clean',
                 'win_velux_check': 'Velux windows',
                 'win_velux_qty': 'Number of Velux windows',
@@ -196,16 +197,25 @@
             question: 'Does your property have a conservatory?',
             type: 'single',
             options: [
-                { value: 'yes', label: 'Yes', next: 'win_cons_roof' },
+                { value: 'yes', label: 'Yes', next: 'win_cons_size' },
                 { value: 'no', label: 'No', next: 'win_velux_check' }
+            ]
+        },
+        'win_cons_size': {
+            question: 'What size is your conservatory?',
+            type: 'single',
+            dynamicLabels: true, // Will be populated from admin settings
+            options: [
+                { value: 'small', label: 'Small (SIZE)', next: 'win_cons_roof' },
+                { value: 'medium', label: 'Medium (SIZE)', next: 'win_cons_roof' },
+                { value: 'large', label: 'Large (SIZE)', next: 'win_cons_roof' }
             ]
         },
         'win_cons_roof': {
             question: 'Would you like the roof of your conservatory cleaned?',
             type: 'single',
-            priceField: true,
             options: [
-                { value: 'yes', label: 'Yes', priceKey: 'ow_win_addon_cons_roof', next: 'win_velux_check' },
+                { value: 'yes', label: 'Yes', next: 'win_velux_check' },
                 { value: 'no', label: 'No', next: 'win_velux_check' }
             ]
         },
@@ -292,14 +302,7 @@
                 { value: 'weekly', label: 'Weekly', next: 'dom_prop_type' },
                 { value: 'fortnightly', label: 'Fortnightly', next: 'dom_prop_type' },
                 { value: 'monthly', label: 'Monthly', next: 'dom_prop_type' },
-                { value: 'one-off-deep', label: 'One Off Deep Clean', next: 'dom_deep_redirect' }
-            ]
-        },
-        'dom_deep_redirect': {
-            question: 'Deep Clean Selected',
-            type: 'single',
-            options: [
-                { value: 'continue', label: 'Continue to Deep Clean Quote →', next: 'eot_prop_type' }
+                { value: 'one-off-deep', label: 'One Off Deep Clean', next: 'eot_prop_type' }
             ]
         },
         'dom_prop_type': {
