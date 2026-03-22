@@ -1,22 +1,68 @@
 {
-    "$schema": "https://schemas.wp.org/trunk/block.json",
-    "apiVersion": 3,
-    "name": "progreenclean/hero",
-    "version": "1.0.0",
-    "title": "PGC Hero",
-    "category": "progreenclean",
-    "icon": "cover-image",
-    "description": "Animated hero section with configurable background",
-    "supports": {"html": false, "align": ["wide", "full"]},
-    "attributes": {
-        "headline": {"type": "string", "default": "Professional Cleaning Services"},
-        "subheadline": {"type": "string", "default": "Eco-friendly cleaning for your home and business"},
-        "backgroundType": {"type": "string", "default": "image"},
-        "backgroundImage": {"type": "object", "default": null},
-        "overlayOpacity": {"type": "number", "default": 40},
-        "primaryCta": {"type": "object", "default": {"text": "Get a Quote", "url": "/get-a-quote/"}},
-        "secondaryCta": {"type": "object", "default": {"text": "Call Us", "url": "tel:"}},
-        "size": {"type": "string", "default": "large"}
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "progreenclean/hero",
+  "version": "1.0.0",
+  "title": "Hero Section",
+  "category": "progreenclean",
+  "icon": "format-image",
+  "description": "Hero section with headline, buttons and trust badges",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "attributes": {
+    "headline": {
+      "type": "string",
+      "default": "Professional Cleaning Services"
     },
-    "render": "file:./render.php"
+    "subheadline": {
+      "type": "string",
+      "default": "Eco-friendly cleaning for homes and businesses in Surrey"
+    },
+    "primaryCtaText": {
+      "type": "string",
+      "default": "Get Your Free Quote"
+    },
+    "primaryCtaUrl": {
+      "type": "string",
+      "default": "/get-a-quote/"
+    },
+    "secondaryCtaText": {
+      "type": "string",
+      "default": "Our Services"
+    },
+    "secondaryCtaUrl": {
+      "type": "string",
+      "default": "/services/"
+    },
+    "backgroundType": {
+      "type": "string",
+      "default": "gradient"
+    },
+    "backgroundImage": {
+      "type": "object",
+      "default": null
+    },
+    "backgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "overlayOpacity": {
+      "type": "number",
+      "default": 40
+    },
+    "trustBar": {
+      "type": "boolean",
+      "default": true
+    },
+    "size": {
+      "type": "string",
+      "default": "large"
+    }
+  },
+  "editorScript": "file:./block.js",
+  "editorStyle": "file:./editor.css",
+  "style": "file:./style.css",
+  "render": "file:./block.php"
 }

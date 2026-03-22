@@ -10,10 +10,11 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Register custom blocks
+ * Register custom blocks using block.json
  */
 add_action('init', function (): void {
-    $blocks = [
+    // Blocks with block.json files (WordPress 5.8+ method)
+    $blocks_with_json = [
         'hero',
         'service-grid',
         'service-card',
@@ -37,8 +38,17 @@ add_action('init', function (): void {
         'section-background',
     ];
     
-    foreach ($blocks as $block) {
-        register_block_type(PGC_PATH . '/blocks/' . $block);
+    foreach ($blocks_with_json as $block) {
+        $block_path = PGC_PATH . '/blocks/' . $block;
+        
+        // Check if block.json exists
+        if (file_exists($block_path . '/block.json')) {
+            // Use register_block_type with block.json (modern method)
+            register_block_type($block_path);
+        } elseif (file_exists($block_path . '/block.php')) {
+            // Fallback to PHP registration (legacy method)
+            require_once $block_path . '/block.php';
+        }
     }
 });
 
@@ -78,3 +88,30 @@ add_action('init', function (): void {
         'label' => __('ProGreenClean Sections', 'progreenclean'),
     ]);
 });
+
+/**
+ * Remove unwanted theme blocks from inserter
+ */
+add_filter('allowed_block_types_all', function($allowed_blocks, $editor_context) {
+    // Get all registered blocks
+    $block_types = WP_Block_Type_Registry::get_instance()->get_all_registered();
+    
+    $allowed = [];
+    
+    foreach ($block_types as $block_type => $block) {
+        // Allow core blocks
+        if (strpos($block_type, 'core/') === 0) {
+            $allowed[] = $block_type;
+        }
+        // Allow ProGreenClean blocks
+        elseif (strpos($block_type, 'progreenclean/') === 0) {
+            $allowed[] = $block_type;
+        }
+        // Explicitly remove theme template parts
+        elseif ($block_type === 'core/template-part') {
+            continue;
+        }
+    }
+    
+    return $allowed;
+}, 10, 2);

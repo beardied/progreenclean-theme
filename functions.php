@@ -877,36 +877,34 @@ add_shortcode('pgc_price', function($atts) {
 
 /**
  * Phone Link Shortcode - Clickable phone number
- * Usage: [pgc_phone_link text="Call Us"] or [pgc_phone_link]
+ * Usage: [pgc_phone_link class="optional-css-class"]
+ * Displays: The phone number as clickable text with tel: link
  */
 add_shortcode('pgc_phone_link', function($atts) {
     $atts = shortcode_atts([
-        'text' => '',
         'class' => '',
     ], $atts);
     
     $phone = get_option('pgc_phone', '0800 123 4567');
-    $display = $atts['text'] ?: $phone;
     $class = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
     
-    return '<a href="tel:' . esc_attr(preg_replace('/[^0-9+]/', '', $phone)) . '"' . $class . '>' . esc_html($display) . '</a>';
+    return '<a href="tel:' . esc_attr(preg_replace('/[^0-9+]/', '', $phone)) . '"' . $class . '>' . esc_html($phone) . '</a>';
 });
 
 /**
  * Email Link Shortcode - Clickable email
- * Usage: [pgc_email_link text="Email Us"] or [pgc_email_link]
+ * Usage: [pgc_email_link class="optional-css-class"]
+ * Displays: The email address as clickable text with mailto: link
  */
 add_shortcode('pgc_email_link', function($atts) {
     $atts = shortcode_atts([
-        'text' => '',
         'class' => '',
     ], $atts);
     
     $email = get_option('pgc_contact_email', 'info@progreenclean.co.uk');
-    $display = $atts['text'] ?: $email;
     $class = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
     
-    return '<a href="mailto:' . esc_attr($email) . '"' . $class . '>' . esc_html($display) . '</a>';
+    return '<a href="mailto:' . esc_attr($email) . '"' . $class . '>' . esc_html($email) . '</a>';
 });
 
 /**
@@ -989,15 +987,16 @@ add_shortcode('pgc_children', function($atts) {
     
     ob_start();
     ?>
-    <div class="pgc-children-grid">
+    <div class="pgc-service-grid">
         <?php foreach ($children as $child) : 
             $excerpt = $child->post_excerpt ?: wp_trim_words($child->post_content, 20);
+            $icon = get_post_meta($child->ID, '_pgc_service_icon', true) ?: '🧹';
             $price_html = '';
             
             if ($atts['feature_price']) {
                 $price = pgc_get_price($atts['feature_price']);
                 if ($price > 0) {
-                    $price_html = '<span class="pgc-child-price">' . 
+                    $price_html = '<span class="pgc-service-card__price">' . 
                         esc_html($atts['feature_price_prefix']) . 
                         '£' . number_format($price, 2) . 
                         esc_html($atts['feature_price_suffix']) . 
@@ -1005,15 +1004,18 @@ add_shortcode('pgc_children', function($atts) {
                 }
             }
         ?>
-            <article class="pgc-child-card">
-                <h3 class="pgc-child-card__title">
-                    <a href="<?php echo get_permalink($child->ID); ?>"><?php echo esc_html($child->post_title); ?></a>
-                </h3>
-                <p class="pgc-child-card__excerpt"><?php echo esc_html($excerpt); ?></p>
-                <?php if ($price_html) : ?>
-                    <div class="pgc-child-card__price"><?php echo $price_html; ?></div>
-                <?php endif; ?>
-                <a href="<?php echo get_permalink($child->ID); ?>" class="pgc-child-card__link">Learn More</a>
+            <article class="pgc-service-card">
+                <div class="pgc-service-card__icon"><?php echo esc_html($icon); ?></div>
+                <h3 class="pgc-service-card__title"><?php echo esc_html($child->post_title); ?></h3>
+                <p class="pgc-service-card__description"><?php echo esc_html($excerpt); ?></p>
+                <div class="pgc-service-card__footer">
+                    <?php if ($price_html) : ?>
+                        <?php echo $price_html; ?>
+                    <?php else: ?>
+                        <span></span>
+                    <?php endif; ?>
+                    <a href="<?php echo get_permalink($child->ID); ?>" class="pgc-service-card__link">Learn More →</a>
+                </div>
             </article>
         <?php endforeach; ?>
     </div>
@@ -1169,6 +1171,7 @@ function pgc_render_pricing_page_v3() {
                                     ?>
                                     <td>
                                         £<input type="number" name="prices[<?php echo esc_attr($key); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 70px;">
+                                        <br><small style="color: #999; font-size: 10px;">[<?php echo esc_html($key); ?>]</small>
                                     </td>
                                     <?php endforeach; ?>
                                 </tr>
@@ -1186,7 +1189,7 @@ function pgc_render_pricing_page_v3() {
                                         : pgc_get_price($field['key']);
                                 ?>
                                 <tr>
-                                    <td style="width: 60%;"><?php echo esc_html($field['label']); ?></td>
+                                    <td style="width: 60%;"><?php echo esc_html($field['label']); ?><br><small style="color: #999; font-size: 10px;">[<?php echo esc_html($field['key']); ?>]</small></td>
                                     <td>
                                         <?php if ($field_type === 'checkbox') : ?>
                                             <input type="checkbox" name="prices[<?php echo esc_attr($field['key']); ?>]" value="1" <?php checked($value, 1); ?>>
@@ -1216,7 +1219,7 @@ function pgc_render_pricing_page_v3() {
                                     $price = pgc_get_price($field['key']);
                                 ?>
                                 <tr>
-                                    <td><?php echo esc_html($field['label']); ?></td>
+                                    <td><?php echo esc_html($field['label']); ?><br><small style="color: #999; font-size: 10px;">[<?php echo esc_html($field['key']); ?>]</small></td>
                                     <td>£<input type="number" name="prices[<?php echo esc_attr($field['key']); ?>]" value="<?php echo esc_attr($price); ?>" step="0.01" min="0" style="width: 100px;"></td>
                                 </tr>
                                 <?php endforeach; ?>
