@@ -976,13 +976,16 @@ function pgc_ajax_submit_quote_v3() {
         'price' => floatval($quote_data['price'] ?? 0),
         'breakdown' => $quote_data['breakdown'] ?? [],
         'answers' => $quote_data['answers'] ?? [],
+        'summary' => sanitize_textarea_field($quote_data['summary'] ?? ''),
     ];
     
-    // Build quote summary
-    $quote_summary = '';
-    foreach ($data['answers'] as $step => $answer) {
-        if (is_array($answer) && isset($answer['label'])) {
-            $quote_summary .= $answer['label'] . "\n";
+    // Use pre-formatted summary from JS, or build fallback
+    $quote_summary = $data['summary'];
+    if (empty($quote_summary)) {
+        foreach ($data['answers'] as $step => $answer) {
+            if (is_array($answer) && isset($answer['label'])) {
+                $quote_summary .= $answer['label'] . "\n";
+            }
         }
     }
     
@@ -999,7 +1002,8 @@ function pgc_ajax_submit_quote_v3() {
         $customer_message .= '</div>';
     }
     
-    $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">Service: <strong>' . $serviceInfo[$data['service']]['label'] . '</strong></p>';
+    $service_display_name = ucwords(str_replace('-', ' ', $data['service']));
+    $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">Service: <strong>' . esc_html($service_display_name) . '</strong></p>';
     $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">Quote Reference: <strong>' . $quote_id . '</strong></p>';
     $customer_message .= '<p style="color: #475569; font-size: 16px; line-height: 1.6;">If you have any questions, please do not hesitate to contact us.</p>';
     $customer_message .= pgc_get_email_footer();
@@ -1013,7 +1017,8 @@ function pgc_ajax_submit_quote_v3() {
     $admin_message .= '<h2 style="color: #0891b2; margin-top: 0;">New Quote Request</h2>';
     $admin_message .= '<table style="width: 100%; border-collapse: collapse;">';
     $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Quote ID</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: 600;">' . $quote_id . '</td></tr>';
-    $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Service</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">' . $serviceInfo[$data['service']]['label'] . '</td></tr>';
+    $service_display_name = ucwords(str_replace('-', ' ', $data['service']));
+    $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Service</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">' . esc_html($service_display_name) . '</td></tr>';
     if ($data['price'] > 0) {
         $admin_message .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Price</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #10b981;">£' . number_format($data['price'], 2) . '</td></tr>';
     }
@@ -1025,7 +1030,26 @@ function pgc_ajax_submit_quote_v3() {
     
     if (!empty($quote_summary)) {
         $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Quote Details</h3>';
-        $admin_message .= '<pre style="background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: monospace;">' . nl2br($quote_summary) . '</pre>';
+        $admin_message .= '<pre style="background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: inherit; line-height: 1.6;">' . nl2br(esc_html($quote_summary)) . '</pre>';
+    }
+    
+    // Price Breakdown Table for Admin
+    if (!empty($data['breakdown'])) {
+        $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Price Breakdown</h3>';
+        $admin_message .= '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+        $admin_message .= '<thead><tr style="background: #f1f5f9;"><th style="padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1;">Item</th><th style="padding: 10px; text-align: right; border-bottom: 2px solid #cbd5e1;">Price</th></tr></thead>';
+        $admin_message .= '<tbody>';
+        foreach ($data['breakdown'] as $item) {
+            $admin_message .= '<tr>';
+            $admin_message .= '<td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">' . esc_html($item['label']) . '</td>';
+            $admin_message .= '<td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">£' . number_format($item['price'], 2) . '</td>';
+            $admin_message .= '</tr>';
+        }
+        $admin_message .= '<tr style="background: #f8fafc; font-weight: 600;">';
+        $admin_message .= '<td style="padding: 10px;">Total</td>';
+        $admin_message .= '<td style="padding: 10px; text-align: right; color: #10b981;">£' . number_format($data['price'], 2) . '</td>';
+        $admin_message .= '</tr>';
+        $admin_message .= '</tbody></table>';
     }
     
     if (!empty($data['notes'])) {
