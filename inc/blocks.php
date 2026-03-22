@@ -20,6 +20,7 @@ add_action('init', function (): void {
         'testimonial-carousel',
         'faq-accordion',
         'faq-item',
+        'faq-custom',
         'location-map',
         'cta-block',
         'process-steps',
@@ -33,6 +34,7 @@ add_action('init', function (): void {
         'before-after',
         'contact-methods',
         'quote-wizard',
+        'section-background',
     ];
     
     foreach ($blocks as $block) {

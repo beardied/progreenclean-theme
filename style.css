@@ -2,7 +2,7 @@
 Theme Name: ProGreenClean
 Theme URI: https://progreenclean.co.uk
 Author: ProGreenClean
-Version: 3.0.3
+Version: 3.0.5
 Requires at least: 6.0
 Requires PHP: 7.4
 */
@@ -1003,6 +1003,147 @@ a:hover { color: var(--pgc-primary-dark); }
     color: var(--pgc-gray-600);
     line-height: 1.6;
     font-size: 0.95rem;
+}
+
+/* ===== SECTION BACKGROUNDS ===== */
+.pgc-section {
+    padding: 80px 0;
+}
+
+.pgc-section--padding-small {
+    padding: 40px 0;
+}
+
+.pgc-section--padding-medium {
+    padding: 60px 0;
+}
+
+.pgc-section--padding-large {
+    padding: 100px 0;
+}
+
+.pgc-section--gradient {
+    background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%);
+    color: #fff;
+}
+
+.pgc-section--blue {
+    background: var(--pgc-primary);
+    color: #fff;
+}
+
+.pgc-section--gray {
+    background: var(--pgc-gray-50);
+}
+
+.pgc-section--white {
+    background: #fff;
+}
+
+/* ===== CHILDREN PAGES GRID ===== */
+.pgc-children-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.pgc-child-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.pgc-child-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.pgc-child-card__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.pgc-child-card__title a {
+    color: var(--pgc-gray-900);
+    text-decoration: none;
+}
+
+.pgc-child-card__title a:hover {
+    color: var(--pgc-primary);
+}
+
+.pgc-child-card__excerpt {
+    color: var(--pgc-gray-600);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.pgc-child-card__price {
+    position: absolute;
+    bottom: 20px;
+    left: 30px;
+    background: var(--pgc-primary);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.pgc-child-card__link {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--pgc-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pgc-child-card__link:hover {
+    color: var(--pgc-primary-dark);
+}
+
+/* ===== CONTACT FORM ===== */
+.pgc-contact-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.pgc-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.pgc-form-field {
+    margin-bottom: 20px;
+}
+
+.pgc-form-field label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--pgc-gray-700);
+}
+
+.pgc-form-field input,
+.pgc-form-field textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--pgc-gray-200);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.pgc-form-field input:focus,
+.pgc-form-field textarea:focus {
+    outline: none;
+    border-color: var(--pgc-primary);
 }
 
 /* ===== RESPONSIVE ===== */

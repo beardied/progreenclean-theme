@@ -5,7 +5,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('PGC_VERSION', '3.0.4');
+define('PGC_VERSION', '3.0.5');
 define('PGC_PATH', get_template_directory());
 define('PGC_URL', get_template_directory_uri());
 
@@ -876,6 +876,152 @@ add_shortcode('pgc_price', function($atts) {
 });
 
 /**
+ * Phone Link Shortcode - Clickable phone number
+ * Usage: [pgc_phone_link text="Call Us"] or [pgc_phone_link]
+ */
+add_shortcode('pgc_phone_link', function($atts) {
+    $atts = shortcode_atts([
+        'text' => '',
+        'class' => '',
+    ], $atts);
+    
+    $phone = get_option('pgc_phone', '0800 123 4567');
+    $display = $atts['text'] ?: $phone;
+    $class = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
+    
+    return '<a href="tel:' . esc_attr(preg_replace('/[^0-9+]/', '', $phone)) . '"' . $class . '>' . esc_html($display) . '</a>';
+});
+
+/**
+ * Email Link Shortcode - Clickable email
+ * Usage: [pgc_email_link text="Email Us"] or [pgc_email_link]
+ */
+add_shortcode('pgc_email_link', function($atts) {
+    $atts = shortcode_atts([
+        'text' => '',
+        'class' => '',
+    ], $atts);
+    
+    $email = get_option('pgc_contact_email', 'info@progreenclean.co.uk');
+    $display = $atts['text'] ?: $email;
+    $class = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
+    
+    return '<a href="mailto:' . esc_attr($email) . '"' . $class . '>' . esc_html($display) . '</a>';
+});
+
+/**
+ * Contact Form Shortcode
+ * Usage: [pgc_contact_form]
+ */
+add_shortcode('pgc_contact_form', function() {
+    ob_start();
+    ?>
+    <form class="pgc-contact-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+        <?php wp_nonce_field('pgc_contact_form'); ?>
+        <input type="hidden" name="action" value="pgc_contact_form">
+        
+        <div class="pgc-form-row">
+            <div class="pgc-form-field">
+                <label for="pgc-name">Name *</label>
+                <input type="text" id="pgc-name" name="name" required>
+            </div>
+            <div class="pgc-form-field">
+                <label for="pgc-email">Email *</label>
+                <input type="email" id="pgc-email" name="email" required>
+            </div>
+        </div>
+        
+        <div class="pgc-form-field">
+            <label for="pgc-phone">Phone</label>
+            <input type="tel" id="pgc-phone" name="phone">
+        </div>
+        
+        <div class="pgc-form-field">
+            <label for="pgc-message">Message *</label>
+            <textarea id="pgc-message" name="message" rows="5" required></textarea>
+        </div>
+        
+        <button type="submit" class="pgc-btn pgc-btn-primary">Send Message</button>
+    </form>
+    <?php
+    return ob_get_clean();
+});
+
+/**
+ * Children Pages Shortcode
+ * Usage: [pgc_children parent="Services" feature_price="ow_eot_2bed" feature_price_prefix="From £"]
+ */
+add_shortcode('pgc_children', function($atts) {
+    $atts = shortcode_atts([
+        'parent' => '',
+        'feature_price' => '',
+        'feature_price_prefix' => '',
+        'feature_price_suffix' => '',
+        'orderby' => 'menu_order title',
+        'order' => 'ASC',
+    ], $atts);
+    
+    if (empty($atts['parent'])) {
+        return '';
+    }
+    
+    // Find parent page
+    $parent = get_page_by_path(sanitize_title($atts['parent']));
+    if (!$parent) {
+        $parent = get_page_by_title($atts['parent']);
+    }
+    
+    if (!$parent) {
+        return '';
+    }
+    
+    $children = get_posts([
+        'post_type' => 'page',
+        'post_parent' => $parent->ID,
+        'posts_per_page' => -1,
+        'orderby' => $atts['orderby'],
+        'order' => $atts['order'],
+    ]);
+    
+    if (empty($children)) {
+        return '';
+    }
+    
+    ob_start();
+    ?>
+    <div class="pgc-children-grid">
+        <?php foreach ($children as $child) : 
+            $excerpt = $child->post_excerpt ?: wp_trim_words($child->post_content, 20);
+            $price_html = '';
+            
+            if ($atts['feature_price']) {
+                $price = pgc_get_price($atts['feature_price']);
+                if ($price > 0) {
+                    $price_html = '<span class="pgc-child-price">' . 
+                        esc_html($atts['feature_price_prefix']) . 
+                        '£' . number_format($price, 2) . 
+                        esc_html($atts['feature_price_suffix']) . 
+                        '</span>';
+                }
+            }
+        ?>
+            <article class="pgc-child-card">
+                <h3 class="pgc-child-card__title">
+                    <a href="<?php echo get_permalink($child->ID); ?>"><?php echo esc_html($child->post_title); ?></a>
+                </h3>
+                <p class="pgc-child-card__excerpt"><?php echo esc_html($excerpt); ?></p>
+                <?php if ($price_html) : ?>
+                    <div class="pgc-child-card__price"><?php echo $price_html; ?></div>
+                <?php endif; ?>
+                <a href="<?php echo get_permalink($child->ID); ?>" class="pgc-child-card__link">Learn More</a>
+            </article>
+        <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+/**
  * Schema Markup
  */
 add_action('wp_head', function() {
@@ -950,6 +1096,42 @@ function pgc_render_pricing_page_v3() {
     <div class="wrap">
         <h1>ProGreenClean Pricing Management</h1>
         <p style="color: #666; margin-bottom: 20px;">Configure pricing for all services. These prices are used in the quote calculator.</p>
+        
+        <!-- Shortcode Documentation -->
+        <div class="pgc-shortcode-docs" style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; margin-bottom: 30px;">
+            <div class="pgc-shortcode-header" style="padding: 15px 20px; background: #e0f2fe; border-radius: 8px 8px 0 0; cursor: pointer;" onclick="jQuery(this).next().toggle();">
+                <h3 style="margin: 0; font-size: 16px; color: #0369a1;">📖 Shortcode Documentation (Click to Expand)</h3>
+            </div>
+            <div class="pgc-shortcode-content" style="padding: 20px; display: none;">
+                <p style="margin-bottom: 15px;">Use these shortcodes to display dynamic pricing and content anywhere on your site:</p>
+                
+                <h4 style="margin-top: 20px; margin-bottom: 10px; color: #334155;">Price Shortcode</h4>
+                <code style="background: #f1f5f9; padding: 8px 12px; border-radius: 4px; display: block; margin-bottom: 10px;">[pgc_price key="KEY_HERE" prefix="From £" suffix="+" decimals="2"]</code>
+                <ul style="margin-left: 20px; list-style: disc;">
+                    <li><strong>key</strong> - The price identifier (shown in brackets next to each price field)</li>
+                    <li><strong>prefix</strong> - Text before the price (default: "£")</li>
+                    <li><strong>suffix</strong> - Text after the price</li>
+                    <li><strong>decimals</strong> - Number of decimal places (default: 2)</li>
+                </ul>
+                <p><strong>Example:</strong> <code>[pgc_price key="ow_win_2bed_oneoff" prefix="From £"]</code> displays: From £36.75</p>
+                
+                <h4 style="margin-top: 20px; margin-bottom: 10px; color: #334155;">Contact Shortcodes</h4>
+                <ul style="margin-left: 20px; list-style: disc;">
+                    <li><code>[pgc_phone_link text="Call Us"]</code> - Clickable phone number link</li>
+                    <li><code>[pgc_email_link text="Email Us"]</code> - Clickable email link</li>
+                    <li><code>[pgc_contact_form]</code> - Full contact form</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px; margin-bottom: 10px; color: #334155;">Children Pages Shortcode</h4>
+                <code style="background: #f1f5f9; padding: 8px 12px; border-radius: 4px; display: block; margin-bottom: 10px;">[pgc_children parent="Services" feature_price="ow_eot_2bed" feature_price_prefix="From £"]</code>
+                <ul style="margin-left: 20px; list-style: disc;">
+                    <li><strong>parent</strong> - Parent page title or slug</li>
+                    <li><strong>feature_price</strong> - Price key to display on tiles (optional)</li>
+                    <li><strong>feature_price_prefix</strong> - Text before price (optional)</li>
+                    <li><strong>feature_price_suffix</strong> - Text after price (optional)</li>
+                </ul>
+            </div>
+        </div>
         
         <form method="post">
             <?php wp_nonce_field('pgc_pricing_nonce'); ?>
