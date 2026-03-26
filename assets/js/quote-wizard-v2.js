@@ -575,7 +575,14 @@
             if (next === 'display_quote') {
                 renderStep('upsell_services');
             } else if (next === 'contact_form') {
-                showContactForm();
+                // Service requires manual quote - save and go to upsell
+                allServiceAnswers[currentServiceKey] = {
+                    service: answers['service_selection'].value,
+                    serviceLabel: answers['service_selection'].label,
+                    answers: Object.assign({}, answers),
+                    manualQuote: true
+                };
+                renderStep('upsell_services');
             } else if (next === 'dynamic_oven_next') {
                 // Check if we came from multi-select addons
                 if (answers['dom_addons_has_oven'] || answers['eot_addons_has_oven']) {
@@ -747,6 +754,23 @@
                 if (key.startsWith('all_services')) {
                     newServiceAnswers[key] = answers[key];
                 }
+            }
+            
+            // Check if this service goes straight to contact form (manual quote)
+            if (next === 'contact_form') {
+                // Save as manual quote service and return to upsell
+                allServiceAnswers[currentServiceKey] = {
+                    service: value,
+                    serviceLabel: label,
+                    answers: newServiceAnswers,
+                    manualQuote: true
+                };
+                
+                // Clear answers and go back to upsell
+                Object.keys(answers).forEach(key => delete answers[key]);
+                stepHistory = [];
+                renderStep('upsell_services');
+                return;
             }
             
             // Clear and set new answers
@@ -1191,6 +1215,14 @@
             grandTotal += serviceCalculations[i].price;
         }
         
+        // Get manual quote services
+        const manualQuoteServices = [];
+        for (const key in allServiceAnswers) {
+            if (allServiceAnswers[key].manualQuote) {
+                manualQuoteServices.push(allServiceAnswers[key].serviceLabel);
+            }
+        }
+        
         // Generate summary for all services
         let fullSummary = '';
         for (let i = 0; i < serviceCalculations.length; i++) {
@@ -1202,11 +1234,21 @@
             fullSummary += 'Subtotal: £' + calc.price.toFixed(2) + '\n\n';
         }
         
+        // Add manual quote services to summary
+        if (manualQuoteServices.length > 0) {
+            fullSummary += '=== Services Requiring Manual Quote ===\n';
+            manualQuoteServices.forEach(function(svc) {
+                fullSummary += svc + ': (Quote to be provided)\n';
+            });
+            fullSummary += '\n';
+        }
+        
         let html = '<form id="quote-contact-form">';
         
         // Hidden field with full quote data for admin
         html += '<input type="hidden" name="quote_data" value="' + encodeURIComponent(JSON.stringify({
             services: serviceCalculations,
+            manualServices: manualQuoteServices,
             grandTotal: grandTotal,
             summary: fullSummary
         })) + '">';
@@ -1217,15 +1259,25 @@
         // Price Display with Grand Total
         html += '<div style="background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border: 2px solid rgba(8, 145, 178, 0.2); border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px;">';
         
-        // Show individual service totals if multiple services
-        if (serviceCalculations.length > 1) {
+        // Show individual service totals
+        if (serviceCalculations.length > 0) {
             for (let i = 0; i < serviceCalculations.length; i++) {
                 html += '<div style="font-size: 1rem; color: var(--pgc-gray-600); margin-bottom: 5px;">' + serviceCalculations[i].serviceLabel + ': £' + serviceCalculations[i].price.toFixed(2) + '</div>';
             }
-            html += '<div style="border-top: 1px solid rgba(8, 145, 178, 0.2); margin: 15px 0;"></div>';
         }
         
-        html += '<div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--pgc-primary), var(--pgc-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">£' + grandTotal.toFixed(2) + '</div>';
+        // Show manual quote services
+        if (manualQuoteServices.length > 0) {
+            manualQuoteServices.forEach(function(svc) {
+                html += '<div style="font-size: 1rem; color: var(--pgc-gray-500); margin-bottom: 5px;">' + svc + ': (Quote to be provided)</div>';
+            });
+        }
+        
+        if (serviceCalculations.length > 0) {
+            html += '<div style="border-top: 1px solid rgba(8, 145, 178, 0.2); margin: 15px 0;"></div>';
+            html += '<div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--pgc-primary), var(--pgc-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">£' + grandTotal.toFixed(2) + '</div>';
+        }
+        
         html += '<div style="color: var(--pgc-gray-500); margin-top: 5px;">Grand Total*</div>';
         html += '<div style="color: var(--pgc-gray-400); font-size: 12px; margin-top: 8px;">*Prices are estimates and may vary based on actual conditions</div>';
         html += '</div>';
