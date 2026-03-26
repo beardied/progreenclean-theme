@@ -59,6 +59,7 @@
                 'dom_prop_type': 'Property type',
                 'dom_bedrooms': 'Bedrooms',
                 'dom_bathrooms': 'Bathrooms',
+                'dom_internal_windows': 'Internal windows',
                 'dom_hours': 'Hours required',
                 'dom_addons': 'Extra services',
                 'eot_prop_type': 'Property type',
@@ -357,10 +358,16 @@
             question: 'Number of bathrooms?',
             type: 'single',
             options: [
-                { value: '1', label: '1', next: 'dom_hours' },
-                { value: '2', label: '2', next: 'dom_hours' },
-                { value: '3+', label: '3+', next: 'dom_hours' }
+                { value: '1', label: '1', next: 'dom_internal_windows' },
+                { value: '2', label: '2', next: 'dom_internal_windows' },
+                { value: '3+', label: '3+', next: 'dom_internal_windows' }
             ]
+        },
+        'dom_internal_windows': {
+            question: 'How many internal windows need cleaning?',
+            type: 'number',
+            priceKey: 'ow_price_interior_window',
+            next: 'dom_hours'
         },
         'dom_hours': {
             question: 'Hours required? (Min 2)',
@@ -578,6 +585,32 @@
             renderStep('win_access');
         });
         
+        // Handle number input for internal windows (domestic cleaning)
+        $(document).on('click', '#internal-windows-continue', function() {
+            const qty = $('#internal-windows-qty').val();
+            if (!qty || qty < 0) {
+                alert('Please enter a valid number');
+                return;
+            }
+            
+            if (qty == 0) {
+                answers['dom_internal_windows'] = {
+                    value: '0',
+                    label: 'No internal windows',
+                    priceKey: null
+                };
+            } else {
+                answers['dom_internal_windows'] = {
+                    value: qty,
+                    label: qty + ' internal window' + (parseInt(qty) > 1 ? 's' : ''),
+                    priceKey: 'ow_price_interior_window'
+                };
+            }
+            
+            stepHistory.push(currentStep);
+            renderStep('dom_hours');
+        });
+        
         // Carpet room count change - regenerate rows
         $(document).on('input', '#carpet-room-count', function() {
             let count = parseInt($(this).val()) || 1;
@@ -673,8 +706,13 @@
         // Special handling for number input
         if (step.type === 'number') {
             html += '<div style="max-width: 300px; margin: 0 auto;">';
-            html += '<input type="number" id="velux-qty" min="1" value="1" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid var(--pgc-gray-200); border-radius: 12px; text-align: center; margin-bottom: 20px;">';
-            html += '<button type="button" id="velux-continue" class="pgc-btn pgc-btn-primary" style="width: 100%; padding: 16px;">Continue</button>';
+            if (stepId === 'dom_internal_windows') {
+                html += '<input type="number" id="internal-windows-qty" min="0" value="0" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid var(--pgc-gray-200); border-radius: 12px; text-align: center; margin-bottom: 20px;">';
+                html += '<button type="button" id="internal-windows-continue" class="pgc-btn pgc-btn-primary" style="width: 100%; padding: 16px;">Continue</button>';
+            } else {
+                html += '<input type="number" id="velux-qty" min="1" value="1" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid var(--pgc-gray-200); border-radius: 12px; text-align: center; margin-bottom: 20px;">';
+                html += '<button type="button" id="velux-continue" class="pgc-btn pgc-btn-primary" style="width: 100%; padding: 16px;">Continue</button>';
+            }
             html += '</div>';
         } 
         // Special handling for carpet room selector

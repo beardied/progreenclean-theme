@@ -1547,6 +1547,17 @@ function pgc_ajax_calculate_quote_v3() {
         }
         $breakdown = array_values($breakdown);
         $breakdown[] = ['label' => 'Domestic Cleaning (' . $hours . ' hours @ £' . $hourly_rate . '/hr)', 'price' => $domestic_total];
+        
+        // Internal windows calculation
+        if (isset($answers['dom_internal_windows'])) {
+            $windowQty = intval($answers['dom_internal_windows']['value'] ?? 0);
+            if ($windowQty > 0) {
+                $windowPrice = pgc_get_price('ow_price_interior_window');
+                $windowTotal = $windowQty * $windowPrice;
+                $total += $windowTotal;
+                $breakdown[] = ['label' => 'Internal windows (' . $windowQty . ')', 'price' => $windowTotal];
+            }
+        }
     }
     
     // Carpet Cleaning - Calculate based on room sizes
