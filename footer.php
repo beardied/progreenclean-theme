@@ -3,7 +3,7 @@
         <div class="pgc-footer-grid">
             <div>
                 <div class="pgc-footer-logo"><img src="<?php echo esc_url(PGC_URL . '/assets/images/logo-inverted.png'); ?>" alt="ProGreenClean" style="height: 45px; width: auto; object-fit: contain;"></div>
-                <p class="pgc-footer-desc">Professional eco-friendly cleaning services in Epsom and across Surrey. 10+ years experience, <?php echo number_format(get_option('pgc_reviews_total_count', 500)); ?>+ happy customers, fully insured.</p>
+                <p class="pgc-footer-desc">Professional eco-friendly cleaning services in Epsom and across Surrey. 10+ years experience, <?php echo number_format(intval(get_option('pgc_reviews_total_count', 0))); ?>+ happy customers, fully insured.</p>
             </div>
             
             <div>

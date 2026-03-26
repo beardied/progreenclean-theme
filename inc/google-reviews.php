@@ -654,38 +654,53 @@ add_shortcode('pgc_homepage_reviews', function() {
     
     $reviews = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}pgc_reviews ORDER BY create_time DESC LIMIT 3");
     
-    if (empty($reviews)) {
-        return '<p style="text-align: center;">No reviews available yet.</p>';
-    }
-    
     $star_map = ['ONE' => 1, 'TWO' => 2, 'THREE' => 3, 'FOUR' => 4, 'FIVE' => 5];
     
     $output = '<div class="pgc-reviews-grid">';
-    foreach ($reviews as $review) {
-        $rating = $star_map[$review->star_rating] ?? 0;
-        $stars = str_repeat('★', $rating);
-        $initials = strtoupper(substr($review->reviewer_display_name, 0, 1));
-        // Try to get second initial if name has space
-        $name_parts = explode(' ', $review->reviewer_display_name);
-        if (count($name_parts) > 1 && !empty($name_parts[1])) {
-            $initials = strtoupper(substr($name_parts[0], 0, 1) . substr($name_parts[1], 0, 1));
+    
+    if (empty($reviews)) {
+        // Show placeholder cards when no reviews
+        for ($i = 0; $i < 3; $i++) {
+            $output .= '<div class="pgc-review-card" style="opacity: 0.7;">';
+            $output .= '<div class="pgc-review-stars">★★★★★</div>';
+            $output .= '<p class="pgc-review-text">"Reviews coming soon! Check back later to see what our customers say about our professional cleaning services."</p>';
+            $output .= '<div class="pgc-review-author">';
+            $output .= '<div class="pgc-review-avatar" style="background: var(--pgc-gray-300);">?</div>';
+            $output .= '<div>';
+            $output .= '<div class="pgc-review-name">Coming Soon</div>';
+            $output .= '<div class="pgc-review-location">Check back later</div>';
+            $output .= '</div>';
+            $output .= '</div>';
+            $output .= '</div>';
         }
-        
-        $output .= '<div class="pgc-review-card">';
-        $output .= '<div class="pgc-review-stars">' . $stars . '</div>';
-        $output .= '<p class="pgc-review-text">"' . esc_html($review->comment) . '"</p>';
-        $output .= '<div class="pgc-review-author">';
-        $output .= '<div class="pgc-review-avatar">' . $initials . '</div>';
-        $output .= '<div>';
-        $output .= '<div class="pgc-review-name">' . esc_html($review->reviewer_display_name) . '</div>';
-        $output .= '<div class="pgc-review-location">Verified Google Review</div>';
-        $output .= '</div>';
-        $output .= '</div>';
-        $output .= '</div>';
+    } else {
+        foreach ($reviews as $review) {
+            $rating = $star_map[$review->star_rating] ?? 0;
+            $stars = str_repeat('★', $rating);
+            $initials = strtoupper(substr($review->reviewer_display_name, 0, 1));
+            // Try to get second initial if name has space
+            $name_parts = explode(' ', $review->reviewer_display_name);
+            if (count($name_parts) > 1 && !empty($name_parts[1])) {
+                $initials = strtoupper(substr($name_parts[0], 0, 1) . substr($name_parts[1], 0, 1));
+            }
+            
+            $output .= '<div class="pgc-review-card">';
+            $output .= '<div class="pgc-review-stars">' . $stars . '</div>';
+            $output .= '<p class="pgc-review-text">"' . esc_html($review->comment) . '"</p>';
+            $output .= '<div class="pgc-review-author">';
+            $output .= '<div class="pgc-review-avatar">' . $initials . '</div>';
+            $output .= '<div>';
+            $output .= '<div class="pgc-review-name">' . esc_html($review->reviewer_display_name) . '</div>';
+            $output .= '<div class="pgc-review-location">Verified Google Review</div>';
+            $output .= '</div>';
+            $output .= '</div>';
+            $output .= '</div>';
+        }
     }
+    
     $output .= '</div>';
     
-    // View all reviews link
+    // View all reviews link - always show
     $reviews_page_url = get_permalink(get_page_by_path('reviews'));
     if ($reviews_page_url) {
         $output .= '<div style="text-align: center; margin-top: 40px;">';
