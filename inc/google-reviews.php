@@ -646,6 +646,49 @@ add_shortcode('pgc_google_reviews_all', function() {
 });
 
 /**
+ * Shortcode: [pgc_homepage_reviews]
+ * For homepage - 3 most recent reviews with matching styling
+ */
+add_shortcode('pgc_homepage_reviews', function() {
+    global $wpdb;
+    
+    $reviews = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}pgc_reviews ORDER BY create_time DESC LIMIT 3");
+    
+    if (empty($reviews)) {
+        return '<p style="text-align: center;">No reviews available yet.</p>';
+    }
+    
+    $star_map = ['ONE' => 1, 'TWO' => 2, 'THREE' => 3, 'FOUR' => 4, 'FIVE' => 5];
+    
+    $output = '<div class="pgc-reviews-grid">';
+    foreach ($reviews as $review) {
+        $rating = $star_map[$review->star_rating] ?? 0;
+        $stars = str_repeat('★', $rating);
+        $initials = strtoupper(substr($review->reviewer_display_name, 0, 1));
+        // Try to get second initial if name has space
+        $name_parts = explode(' ', $review->reviewer_display_name);
+        if (count($name_parts) > 1 && !empty($name_parts[1])) {
+            $initials = strtoupper(substr($name_parts[0], 0, 1) . substr($name_parts[1], 0, 1));
+        }
+        
+        $output .= '<div class="pgc-review-card">';
+        $output .= '<div class="pgc-review-stars">' . $stars . '</div>';
+        $output .= '<p class="pgc-review-text">"' . esc_html($review->comment) . '"</p>';
+        $output .= '<div class="pgc-review-author">';
+        $output .= '<div class="pgc-review-avatar">' . $initials . '</div>';
+        $output .= '<div>';
+        $output .= '<div class="pgc-review-name">' . esc_html($review->reviewer_display_name) . '</div>';
+        $output .= '<div class="pgc-review-location">Verified Google Review</div>';
+        $output .= '</div>';
+        $output .= '</div>';
+        $output .= '</div>';
+    }
+    $output .= '</div>';
+    
+    return $output;
+});
+
+/**
  * Helper: Render a single review card (matching reviews page styling)
  */
 function pgc_render_review_card($review, $show_reply = false) {
