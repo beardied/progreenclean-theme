@@ -51,10 +51,12 @@
                 'win_velux_qty': 'Number of Velux windows',
                 'win_access': 'Rear access',
                 'win_parking': 'Parking',
-                'gut_prop_type': 'Property type',
                 'gut_bedrooms': 'Bedrooms',
-                'gut_addons': 'Additional features',
+                'gut_prop_type': 'Property type',
+                'gut_extension': 'Extension',
+                'gut_conservatory': 'Conservatory',
                 'gut_soffits': 'Soffit and fascia',
+                'gut_survey': 'Before/after survey',
                 'dom_type': 'Cleaning type',
                 'dom_prop_type': 'Property type',
                 'dom_bedrooms': 'Bedrooms',
@@ -143,7 +145,7 @@
             type: 'single',
             options: [
                 { value: 'window-cleaning', label: 'Window Cleaning', next: 'win_internal_external' },
-                { value: 'gutter-cleaning', label: 'Gutter Cleaning', next: 'gut_prop_type' },
+                { value: 'gutter-cleaning', label: 'Gutter Cleaning', next: 'gut_bedrooms' },
                 { value: 'domestic-cleaning', label: 'Domestic Cleaning', next: 'dom_type' },
                 { value: 'end-of-tenancy', label: 'Deep Clean/End of Tenancy Cleaning', next: 'eot_prop_type' },
                 { value: 'post-construction', label: 'Post Construction Cleaning', next: 'contact_form' },
@@ -279,45 +281,58 @@
         },
         
         // Gutter Cleaning Flow
-        'gut_prop_type': {
-            question: 'What type of property do you have?',
-            type: 'single',
-            priceField: true,
-            options: [
-                { value: 'detached', label: 'Detached', priceKey: 'ow_gut_base_detached', next: 'gut_bedrooms' },
-                { value: 'semi-detached', label: 'Semi-Detached', priceKey: 'ow_gut_base_semi', next: 'gut_bedrooms' },
-                { value: 'terraced', label: 'Terraced', priceKey: 'ow_gut_base_terraced', next: 'gut_bedrooms' },
-                { value: 'town-house', label: 'Town House', priceKey: 'ow_gut_base_townhouse', next: 'gut_bedrooms' },
-                { value: 'bungalow', label: 'Bungalow', priceKey: 'ow_gut_base_bungalow', next: 'gut_bedrooms' },
-                { value: 'flat', label: 'Flat', priceKey: 'ow_gut_base_flat', next: 'gut_bedrooms' }
-            ]
-        },
         'gut_bedrooms': {
-            question: 'Number of bedrooms?',
+            question: 'How many bedrooms?',
             type: 'single',
             options: [
-                { value: '1-2', label: '1-2 Bedrooms', next: 'gut_addons' },
-                { value: '3', label: '3 Bedrooms', next: 'gut_addons' },
-                { value: '4', label: '4 Bedrooms', next: 'gut_addons' },
-                { value: '5+', label: '5+ Bedrooms', next: 'gut_addons' }
+                { value: '2', label: '2 Bedrooms', next: 'gut_prop_type' },
+                { value: '3', label: '3 Bedrooms', next: 'gut_prop_type' },
+                { value: '4', label: '4 Bedrooms', next: 'gut_prop_type' },
+                { value: '5', label: '5+ Bedrooms', next: 'gut_prop_type' }
             ]
         },
-        'gut_addons': {
-            question: 'Additional features?',
+        'gut_prop_type': {
+            question: 'What type of property?',
             type: 'single',
-            priceField: true,
             options: [
-                { value: 'extension', label: 'Extension', priceKey: 'ow_gut_addon_ext', next: 'gut_soffits' },
-                { value: 'conservatory', label: 'Conservatory', priceKey: 'ow_gut_addon_cons', next: 'gut_soffits' },
-                { value: 'neither', label: 'Neither', next: 'gut_soffits' }
+                { value: 'semi', label: 'Semi-Detached', next: 'gut_extension' },
+                { value: 'detached', label: 'Detached', next: 'gut_extension' },
+                { value: 'terraced', label: 'Terraced', next: 'gut_extension' },
+                { value: 'bungalow', label: 'Bungalow', next: 'gut_extension' },
+                { value: 'townhouse', label: 'Townhouse', next: 'gut_extension' },
+                { value: 'flat', label: 'Flat', next: 'gut_extension' }
+            ]
+        },
+        'gut_extension': {
+            question: 'Do you have an extension?',
+            type: 'single',
+            options: [
+                { value: 'yes', label: 'Yes', next: 'gut_conservatory' },
+                { value: 'no', label: 'No', next: 'gut_conservatory' }
+            ]
+        },
+        'gut_conservatory': {
+            question: 'Do you have a conservatory?',
+            type: 'single',
+            options: [
+                { value: 'yes', label: 'Yes', next: 'gut_soffits' },
+                { value: 'no', label: 'No', next: 'gut_soffits' }
             ]
         },
         'gut_soffits': {
-            question: 'Soffit and fascia cleaning?',
+            question: 'Add soffit and fascia cleaning?',
             type: 'single',
-            priceField: true,
             options: [
-                { value: 'yes', label: 'Yes', priceKey: 'ow_gut_addon_soffit', next: 'display_quote' },
+                { value: 'yes', label: 'Yes', next: 'gut_survey' },
+                { value: 'no', label: 'No', next: 'gut_survey' }
+            ]
+        },
+        'gut_survey': {
+            question: 'Add before and after survey?',
+            subtitle: 'This provides photographic evidence of your gutter cleaning for insurance purposes and your peace of mind. A valuable addition to verify the work has been completed correctly.',
+            type: 'single',
+            options: [
+                { value: 'yes', label: 'Yes', next: 'display_quote' },
                 { value: 'no', label: 'No', next: 'display_quote' }
             ]
         },
@@ -701,7 +716,12 @@
         html += '</div></div>';
         
         // Question
-        html += '<h2 style="font-size: 1.5rem; font-weight: 700; color: var(--pgc-gray-900); margin-bottom: 30px; text-align: center;">' + step.question + '</h2>';
+        html += '<h2 style="font-size: 1.5rem; font-weight: 700; color: var(--pgc-gray-900); margin-bottom: 10px; text-align: center;">' + step.question + '</h2>';
+        
+        // Subtitle if present
+        if (step.subtitle) {
+            html += '<p style="font-size: 14px; color: var(--pgc-gray-500); text-align: center; margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;">' + step.subtitle + '</p>';
+        }
         
         // Special handling for number input
         if (step.type === 'number') {

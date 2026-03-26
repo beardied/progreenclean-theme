@@ -1609,6 +1609,78 @@ function pgc_ajax_calculate_quote_v3() {
         }
     }
     
+    // Gutter Cleaning - Calculate based on bedrooms, property type and addons
+    if ($service === 'gutter-cleaning') {
+        $bedrooms = is_array($answers['gut_bedrooms'] ?? null) ? ($answers['gut_bedrooms']['value'] ?? '2') : ($answers['gut_bedrooms'] ?? '2');
+        $propType = is_array($answers['gut_prop_type'] ?? null) ? ($answers['gut_prop_type']['value'] ?? 'semi') : ($answers['gut_prop_type'] ?? 'semi');
+        
+        // Build base price key
+        $baseKey = 'ow_gut_' . $bedrooms . 'bed_' . $propType;
+        if ($propType === 'townhouse' || $propType === 'flat') {
+            $baseKey = 'ow_gut_' . $propType;
+        }
+        
+        $basePrice = pgc_get_price($baseKey);
+        $total = $basePrice;
+        $breakdown[] = ['label' => 'Gutter cleaning (' . $bedrooms . ' bed ' . ucfirst($propType) . ')', 'price' => $basePrice];
+        
+        // Extension addon
+        $extension = is_array($answers['gut_extension'] ?? null) ? ($answers['gut_extension']['value'] ?? 'no') : ($answers['gut_extension'] ?? 'no');
+        if ($extension === 'yes') {
+            $extKey = 'ow_gut_' . $bedrooms . 'bed_' . $propType . '_ext';
+            if ($propType === 'townhouse' || $propType === 'flat') {
+                $extKey = 'ow_gut_' . $propType . '_ext';
+            }
+            $extPrice = pgc_get_price($extKey);
+            if ($extPrice > 0) {
+                $total += $extPrice;
+                $breakdown[] = ['label' => 'Extension', 'price' => $extPrice];
+            }
+        }
+        
+        // Conservatory addon
+        $conservatory = is_array($answers['gut_conservatory'] ?? null) ? ($answers['gut_conservatory']['value'] ?? 'no') : ($answers['gut_conservatory'] ?? 'no');
+        if ($conservatory === 'yes') {
+            $consKey = 'ow_gut_' . $bedrooms . 'bed_' . $propType . '_cons';
+            if ($propType === 'townhouse' || $propType === 'flat') {
+                $consKey = 'ow_gut_' . $propType . '_cons';
+            }
+            $consPrice = pgc_get_price($consKey);
+            if ($consPrice > 0) {
+                $total += $consPrice;
+                $breakdown[] = ['label' => 'Conservatory', 'price' => $consPrice];
+            }
+        }
+        
+        // Soffit & fascia addon
+        $soffits = is_array($answers['gut_soffits'] ?? null) ? ($answers['gut_soffits']['value'] ?? 'no') : ($answers['gut_soffits'] ?? 'no');
+        if ($soffits === 'yes') {
+            $soffitKey = 'ow_gut_' . $bedrooms . 'bed_' . $propType . '_soffit';
+            if ($propType === 'townhouse' || $propType === 'flat') {
+                $soffitKey = 'ow_gut_' . $propType . '_soffit';
+            }
+            $soffitPrice = pgc_get_price($soffitKey);
+            if ($soffitPrice > 0) {
+                $total += $soffitPrice;
+                $breakdown[] = ['label' => 'Soffit & fascia', 'price' => $soffitPrice];
+            }
+        }
+        
+        // Before/after survey addon
+        $survey = is_array($answers['gut_survey'] ?? null) ? ($answers['gut_survey']['value'] ?? 'no') : ($answers['gut_survey'] ?? 'no');
+        if ($survey === 'yes') {
+            $surveyKey = 'ow_gut_' . $bedrooms . 'bed_' . $propType . '_survey';
+            if ($propType === 'townhouse' || $propType === 'flat') {
+                $surveyKey = 'ow_gut_' . $propType . '_survey';
+            }
+            $surveyPrice = pgc_get_price($surveyKey);
+            if ($surveyPrice > 0) {
+                $total += $surveyPrice;
+                $breakdown[] = ['label' => 'Before/after survey', 'price' => $surveyPrice];
+            }
+        }
+    }
+    
     wp_send_json_success([
         'total' => $total,
         'breakdown' => $breakdown,
