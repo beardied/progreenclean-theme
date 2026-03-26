@@ -659,6 +659,8 @@
                     const currentNum = parseInt(currentServiceKey.replace('service_', ''));
                     currentServiceKey = 'service_' + (currentNum + 1);
                 }
+                // Clear answers and reset for next service
+                answers = {};
                 stepHistory = [];
                 renderStep('upsell_services');
             } else if (next === 'contact_form') {
@@ -675,7 +677,7 @@
                     const currentNum = parseInt(currentServiceKey.replace('service_', ''));
                     currentServiceKey = 'service_' + (currentNum + 1);
                 }
-                // Clear answers for next service selection
+                // Clear answers and reset for next service
                 answers = {};
                 stepHistory = [];
                 renderStep('upsell_services');
