@@ -13,6 +13,7 @@
     let stepHistory = [];
     let allServiceAnswers = {};
     let currentServiceKey = 'service_1';
+    let includedServices = []; // Services included as add-ons (won't show in upsell)
     
     // Service display names and icons
     const serviceInfo = {
@@ -24,6 +25,8 @@
         'commercial-cleaning': { label: 'Commercial Cleaning', icon: '🏢' },
         'carpet-cleaning': { label: 'Carpet Cleaning', icon: '🧹' },
         'oven-cleaning': { label: 'Oven Cleaning', icon: '🔥' },
+        'fridge-cleaning': { label: 'Fridge Cleaning', icon: '🧊' },
+        'microwave-cleaning': { label: 'Microwave Cleaning', icon: '📟' },
         'pressure-washing': { label: 'Pressure Washing', icon: '💧' },
         'solar-panel': { label: 'Solar Panel Cleaning', icon: '☀️' },
         'graffiti-removal': { label: 'Graffiti Removal', icon: '🎨' }
@@ -158,6 +161,8 @@
                 { value: 'commercial-cleaning', label: 'Commercial Cleaning Exterior and Interior', next: 'contact_form' },
                 { value: 'carpet-cleaning', label: 'Carpet Cleaning', next: 'carpet_prop_type' },
                 { value: 'oven-cleaning', label: 'Oven Cleaning', next: 'oven_size' },
+                { value: 'fridge-cleaning', label: 'Fridge Cleaning', next: 'contact_form' },
+                { value: 'microwave-cleaning', label: 'Microwave Cleaning', next: 'contact_form' },
                 { value: 'pressure-washing', label: 'Pressure Washing', next: 'pw_location' },
                 { value: 'solar-panel', label: 'Solar Panel Cleaning', next: 'contact_form' },
                 { value: 'graffiti-removal', label: 'Graffiti Removal', next: 'contact_form' }
@@ -474,6 +479,22 @@
             ],
             nextStep: 'eot_addons_next'
         },
+        'eot_oven_check': {
+            question: 'Oven cleaning required?',
+            type: 'single',
+            options: [
+                { value: 'yes', label: 'Yes', next: 'oven_size' },
+                { value: 'no', label: 'No', next: 'eot_fridge_check' }
+            ]
+        },
+        'eot_fridge_check': {
+            question: 'Inside fridge cleaning required?',
+            type: 'single',
+            options: [
+                { value: 'yes', label: 'Yes', priceKey: 'ow_price_fridge', next: 'display_quote' },
+                { value: 'no', label: 'No', next: 'display_quote' }
+            ]
+        },
         
         // Carpet Cleaning Flow
         'carpet_prop_type': {
@@ -568,11 +589,48 @@
                 priceKey: priceKey || null
             };
             
+            // Track included services from EOT flow
+            if (step === 'eot_oven_check' && value === 'yes') {
+                if (includedServices.indexOf('oven-cleaning') === -1) {
+                    includedServices.push('oven-cleaning');
+                }
+            }
+            if (step === 'eot_fridge_check' && value === 'yes') {
+                if (includedServices.indexOf('fridge-cleaning') === -1) {
+                    includedServices.push('fridge-cleaning');
+                }
+            }
+            // Track carpet cleaning when selected in EOT flow
+            if (step === 'eot_carpets_check' && value === 'yes') {
+                if (includedServices.indexOf('carpet-cleaning') === -1) {
+                    includedServices.push('carpet-cleaning');
+                }
+            }
+            // Track fridge/microwave from oven_extras step
+            if (step === 'oven_extras') {
+                if (value === 'fridge' && includedServices.indexOf('fridge-cleaning') === -1) {
+                    includedServices.push('fridge-cleaning');
+                }
+                if (value === 'microwave' && includedServices.indexOf('microwave-cleaning') === -1) {
+                    includedServices.push('microwave-cleaning');
+                }
+            }
+            
             // Add to history
             stepHistory.push(currentStep);
             
             // Handle next step
             if (next === 'display_quote') {
+                // Save current service before showing upsell
+                allServiceAnswers[currentServiceKey] = {
+                    service: answers['service_selection'].value,
+                    serviceLabel: answers['service_selection'].label,
+                    answers: Object.assign({}, answers)
+                };
+                // Increment service key for next service
+                const currentNum = parseInt(currentServiceKey.replace('service_', ''));
+                currentServiceKey = 'service_' + (currentNum + 1);
+                stepHistory = [];
                 renderStep('upsell_services');
             } else if (next === 'contact_form') {
                 // Service requires manual quote - save and go to upsell
@@ -688,6 +746,8 @@
             const selected = [];
             const selectedLabels = [];
             let hasOven = false;
+            let hasFridge = false;
+            let hasMicrowave = false;
             
             $('.quote-option-multi[data-step="' + stepId + '"][data-selected="true"]').each(function() {
                 const value = $(this).data('value');
@@ -696,6 +756,8 @@
                 selected.push({ value: value, priceKey: priceKey });
                 selectedLabels.push(label);
                 if (value === 'oven') hasOven = true;
+                if (value === 'fridge') hasFridge = true;
+                if (value === 'microwave') hasMicrowave = true;
             });
             
             answers[stepId] = {
@@ -703,6 +765,17 @@
                 label: selectedLabels.length > 0 ? selectedLabels.join(', ') : 'No extras',
                 multi: selected
             };
+            
+            // Track included services so they don't show in upsell
+            if (hasOven && includedServices.indexOf('oven-cleaning') === -1) {
+                includedServices.push('oven-cleaning');
+            }
+            if (hasFridge && includedServices.indexOf('fridge-cleaning') === -1) {
+                includedServices.push('fridge-cleaning');
+            }
+            if (hasMicrowave && includedServices.indexOf('microwave-cleaning') === -1) {
+                includedServices.push('microwave-cleaning');
+            }
             
             stepHistory.push(currentStep);
             
@@ -953,6 +1026,16 @@
                     selectedServiceKeys.push(answers['service_selection'].value);
                 }
             }
+            
+            // Add included services (add-ons) to the selected list so they don't show as options
+            includedServices.forEach(function(svc) {
+                if (selectedServiceKeys.indexOf(svc) === -1) {
+                    selectedServiceKeys.push(svc);
+                    if (serviceInfo[svc]) {
+                        selectedServices.push(serviceInfo[svc].label + ' (included)');
+                    }
+                }
+            });
             
             // Show selected services
             if (selectedServices.length > 0) {
@@ -1257,13 +1340,24 @@
             
             // Handle manual quote services differently
             if (calc.manualQuote) {
-                fullSummary += '(Quote to be provided)\n\n';
+                fullSummary += '(We will be in contact regarding this service quotation)\n\n';
             } else {
                 for (let j = 0; j < calc.breakdown.length; j++) {
                     fullSummary += calc.breakdown[j].label + ': £' + calc.breakdown[j].price.toFixed(2) + '\n';
                 }
                 fullSummary += 'Subtotal: £' + calc.price.toFixed(2) + '\n\n';
             }
+        }
+        
+        // Add included services (add-ons) to summary
+        if (includedServices.length > 0) {
+            fullSummary += '=== Included Add-on Services ===\n';
+            includedServices.forEach(function(svc) {
+                if (serviceInfo[svc]) {
+                    fullSummary += serviceInfo[svc].label + ' (included with main service)\n';
+                }
+            });
+            fullSummary += '\n';
         }
         
         let html = '<form id="quote-contact-form">';
@@ -1292,7 +1386,7 @@
         // Show manual quote services separately
         if (manualQuoteServices.length > 0) {
             manualQuoteServices.forEach(function(svc) {
-                html += '<div style="font-size: 1rem; color: var(--pgc-gray-500); margin-bottom: 5px;">' + svc + ': (Quote to be provided)</div>';
+                html += '<div style="font-size: 1rem; color: var(--pgc-gray-500); margin-bottom: 5px;">' + svc + ': (We will be in contact regarding this service quotation)</div>';
             });
         }
         
