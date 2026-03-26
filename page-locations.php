@@ -71,9 +71,9 @@ $locations = get_posts([
     </section>
 
     <!-- CTA Section -->
-    <section class="pgc-cta-section" style="margin-top: 60px;">
+    <section class="pgc-cta-section" style="margin-top: 60px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); padding: 80px 0;">
         <div class="pgc-container">
-            <div class="pgc-cta-inner" style="text-align: center; padding: 60px 40px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); border-radius: 20px;">
+            <div class="pgc-cta-inner" style="text-align: center;">
                 <span class="pgc-cta-badge" style="display: inline-block; background: rgba(255,255,255,0.2); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;">NOT IN THESE AREAS?</span>
                 <h2 class="pgc-cta-title" style="color: #fff; font-size: 2rem; font-weight: 800; margin-bottom: 16px;">We May Still Be Able To Help</h2>
                 <p class="pgc-cta-desc" style="color: rgba(255,255,255,0.9); font-size: 1.1rem; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">Contact us to check availability in your location. We are constantly expanding.</p>
