@@ -238,6 +238,7 @@ function pgc_render_settings_page() {
  */
 //require_once PGC_PATH . '/inc/blocks.php';
 require_once PGC_PATH . '/inc/pricing-config.php';
+require_once PGC_PATH . '/inc/google-reviews.php';
 //require_once PGC_PATH . '/inc/database.php';
 //require_once PGC_PATH . '/inc/quote-system.php';
 //require_once PGC_PATH . '/inc/email-templates.php';

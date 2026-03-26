@@ -1262,3 +1262,116 @@ a:hover { color: var(--pgc-primary-dark); }
 .pgc-sparkle {
     animation: sparkle 2s ease-in-out infinite;
 }
+/* Google Reviews Styles */
+.pgc-reviews-summary {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: linear-gradient(135deg, var(--pgc-gray-50) 0%, var(--pgc-white) 100%);
+    border-radius: 16px;
+    border: 1px solid var(--pgc-gray-200);
+}
+
+.pgc-reviews-summary h2 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--pgc-primary);
+    margin: 0 0 10px;
+}
+
+.pgc-reviews-summary p {
+    color: var(--pgc-gray-500);
+    margin: 0;
+}
+
+.pgc-reviews-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .pgc-reviews-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pgc-review-card {
+    background: var(--pgc-white);
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid var(--pgc-gray-200);
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-smooth);
+}
+
+.pgc-review-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.pgc-review-card__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.pgc-review-card__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--pgc-gray-100);
+}
+
+.pgc-review-card__info {
+    flex: 1;
+}
+
+.pgc-review-card__name {
+    font-weight: 600;
+    color: var(--pgc-gray-800);
+    margin: 0 0 4px;
+}
+
+.pgc-review-card__stars {
+    color: #fbbf24;
+    font-size: 16px;
+    letter-spacing: 2px;
+}
+
+.pgc-review-card__comment {
+    color: var(--pgc-gray-600);
+    line-height: 1.7;
+    margin: 0 0 12px;
+}
+
+.pgc-review-card__date {
+    font-size: 12px;
+    color: var(--pgc-gray-400);
+}
+
+.pgc-review-card__reply {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+    border-radius: 12px;
+    border-left: 3px solid var(--pgc-primary);
+}
+
+.pgc-review-card__reply-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--pgc-primary);
+    margin: 0 0 8px;
+}
+
+.pgc-review-card__reply-text {
+    color: var(--pgc-gray-600);
+    margin: 0;
+    line-height: 1.6;
+    font-size: 14px;
+}
