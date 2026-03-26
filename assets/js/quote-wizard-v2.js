@@ -704,8 +704,10 @@
         let allServiceAnswers = {};
         let currentServiceKey = 'service_1';
         
-        // Handle upsell service selection
-        $(document).on('click', '.quote-option-upsell', function() {
+        // Handle upsell service selection - when clicking a service in upsell step
+        $(document).on('click', '.quote-option[data-step="upsell_services"]', function(e) {
+            e.stopPropagation(); // Prevent the regular quote-option handler
+            
             const value = $(this).data('value');
             const next = $(this).data('next');
             const label = $(this).find('.option-label').text();
@@ -732,13 +734,6 @@
                 'service_selection': { value: value, label: label }
             };
             
-            // Copy additional service tracking
-            for (const key in answers) {
-                if (key.startsWith('additional_service_') || key === 'all_services') {
-                    newServiceAnswers[key] = answers[key];
-                }
-            }
-            
             // Track all services
             if (!newServiceAnswers['all_services']) {
                 newServiceAnswers['all_services'] = [];
@@ -748,6 +743,13 @@
                 label: label,
                 key: currentServiceKey
             });
+            
+            // Copy existing tracked services
+            for (const key in answers) {
+                if (key.startsWith('all_services')) {
+                    newServiceAnswers[key] = answers[key];
+                }
+            }
             
             // Clear and set new answers
             Object.keys(answers).forEach(key => delete answers[key]);
@@ -899,37 +901,44 @@
         }
         // Special handling for upsell step
         else if (step.type === 'upsell') {
-            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px;">';
-            
-            // Get already selected services
+            // Get already selected services with their labels
             const selectedServices = [];
+            const selectedServiceKeys = [];
             for (const key in answers) {
                 if (key === 'service_selection' || key.startsWith('additional_service_')) {
-                    selectedServices.push(answers[key].value);
+                    selectedServices.push(answers[key].label);
+                    selectedServiceKeys.push(answers[key].value);
                 }
             }
             
-            // Show all services except already selected
-            const allServices = [
-                { value: 'window-cleaning', label: 'Window Cleaning', icon: '🪟', next: 'win_internal_external' },
-                { value: 'gutter-cleaning', label: 'Gutter Cleaning', icon: '🏠', next: 'gut_bedrooms' },
-                { value: 'domestic-cleaning', label: 'Domestic Cleaning', icon: '🏡', next: 'dom_type' },
-                { value: 'end-of-tenancy', label: 'Deep Clean/End of Tenancy', icon: '📦', next: 'eot_prop_type' },
-                { value: 'carpet-cleaning', label: 'Carpet Cleaning', icon: '🧹', next: 'carpet_prop_type' },
-                { value: 'oven-cleaning', label: 'Oven Cleaning', icon: '🔥', next: 'oven_size' },
-                { value: 'pressure-washing', label: 'Pressure Washing', icon: '💧', next: 'pw_location' }
-            ];
+            // Show selected services
+            if (selectedServices.length > 0) {
+                html += '<div style="background: var(--pgc-gray-50); border-radius: 12px; padding: 20px; margin-bottom: 30px;">';
+                html += '<h3 style="font-size: 1rem; font-weight: 600; color: var(--pgc-gray-700); margin-bottom: 15px;">Services already selected:</h3>';
+                html += '<ul style="margin: 0; padding-left: 20px; color: var(--pgc-gray-600);">';
+                selectedServices.forEach(function(svc) {
+                    html += '<li style="margin-bottom: 5px;">' + svc + '</li>';
+                });
+                html += '</ul>';
+                html += '</div>';
+            }
             
-            allServices.forEach(function(svc) {
-                if (selectedServices.indexOf(svc.value) === -1) {
-                    html += '<div class="quote-option-upsell" data-value="' + svc.value + '" data-next="' + svc.next + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
-                    html += '<div style="font-size: 32px; margin-bottom: 8px;">' + svc.icon + '</div>';
-                    html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + svc.label + '</div>';
+            // Use same format as original service_selection
+            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">';
+            
+            // Get options from service_selection (same as first screen)
+            const serviceOptions = questionFlow['service_selection'].options;
+            
+            serviceOptions.forEach(function(opt) {
+                // Skip already selected services and services that go to contact_form
+                if (selectedServiceKeys.indexOf(opt.value) === -1 && opt.next !== 'contact_form') {
+                    html += '<div class="quote-option" data-step="' + stepId + '" data-value="' + opt.value + '" data-next="' + opt.next + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
+                    html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + opt.label + '</div>';
                     html += '</div>';
                 }
             });
             html += '</div>';
-            html += '<div style="text-align: center; margin-top: 20px;">';
+            html += '<div style="text-align: center; margin-top: 30px;">';
             html += '<button type="button" id="upsell-finish" class="pgc-btn pgc-btn-primary" style="padding: 16px 48px; font-size: 16px;">No thanks, that\'s all for now</button>';
             html += '</div>';
         } 
