@@ -161,8 +161,8 @@
                 { value: 'commercial-cleaning', label: 'Commercial Cleaning Exterior and Interior', next: 'contact_form' },
                 { value: 'carpet-cleaning', label: 'Carpet Cleaning', next: 'carpet_prop_type' },
                 { value: 'oven-cleaning', label: 'Oven Cleaning', next: 'oven_size' },
-                { value: 'fridge-cleaning', label: 'Fridge Cleaning', next: 'contact_form' },
-                { value: 'microwave-cleaning', label: 'Microwave Cleaning', next: 'contact_form' },
+                { value: 'fridge-cleaning', label: 'Fridge Cleaning', next: 'fridge_cleaning_qty' },
+                { value: 'microwave-cleaning', label: 'Microwave Cleaning', next: 'microwave_cleaning_qty' },
                 { value: 'pressure-washing', label: 'Pressure Washing', next: 'pw_location' },
                 { value: 'solar-panel', label: 'Solar Panel Cleaning', next: 'contact_form' },
                 { value: 'graffiti-removal', label: 'Graffiti Removal', next: 'contact_form' }
@@ -553,6 +553,30 @@
             ]
         },
         
+        // Fridge Cleaning Flow
+        'fridge_cleaning_qty': {
+            question: 'How many fridges to clean?',
+            type: 'single',
+            priceField: true,
+            options: [
+                { value: '1', label: '1 Fridge', priceKey: 'ow_price_fridge', next: 'display_quote' },
+                { value: '2', label: '2 Fridges', priceKey: 'ow_price_fridge', next: 'display_quote' },
+                { value: '3', label: '3+ Fridges', priceKey: 'ow_price_fridge', next: 'display_quote' }
+            ]
+        },
+        
+        // Microwave Cleaning Flow
+        'microwave_cleaning_qty': {
+            question: 'How many microwaves to clean?',
+            type: 'single',
+            priceField: true,
+            options: [
+                { value: '1', label: '1 Microwave', priceKey: 'ow_price_microwave', next: 'display_quote' },
+                { value: '2', label: '2 Microwaves', priceKey: 'ow_price_microwave', next: 'display_quote' },
+                { value: '3', label: '3+ Microwaves', priceKey: 'ow_price_microwave', next: 'display_quote' }
+            ]
+        },
+        
         // Pressure Washing Flow
         'pw_location': {
             question: 'Where do you require pressure washing?',
@@ -796,13 +820,26 @@
             const next = $(this).data('next');
             const label = $(this).find('.option-label').text();
             
-            // Save current service answers (if there's a current service being worked on)
+            console.log('Upsell service clicked:', value, 'next:', next, 'currentServiceKey:', currentServiceKey);
+            
+            // Save current service answers (if there's a current service being worked on AND not already saved)
             if (answers['service_selection']) {
-                allServiceAnswers[currentServiceKey] = {
-                    service: answers['service_selection'].value,
-                    serviceLabel: answers['service_selection'].label,
-                    answers: Object.assign({}, answers)
-                };
+                // Check if this service is already saved
+                let alreadySaved = false;
+                for (const key in allServiceAnswers) {
+                    if (allServiceAnswers[key].service === answers['service_selection'].value) {
+                        alreadySaved = true;
+                        break;
+                    }
+                }
+                if (!alreadySaved) {
+                    allServiceAnswers[currentServiceKey] = {
+                        service: answers['service_selection'].value,
+                        serviceLabel: answers['service_selection'].label,
+                        answers: Object.assign({}, answers)
+                    };
+                    console.log('Saved current service to', currentServiceKey);
+                }
             }
             
             // Find the next available service number
@@ -814,9 +851,11 @@
                 }
             }
             currentServiceKey = 'service_' + (maxNum + 1);
+            console.log('Next service key:', currentServiceKey, 'allServiceAnswers:', Object.keys(allServiceAnswers));
             
             // Check if this service goes straight to contact form (manual quote)
             if (next === 'contact_form') {
+                console.log('Saving manual quote service:', value, 'to', currentServiceKey);
                 // Save as manual quote service and return to upsell
                 allServiceAnswers[currentServiceKey] = {
                     service: value,
@@ -838,6 +877,7 @@
                 // Clear answers and go back to upsell
                 answers = {};
                 stepHistory = [];
+                console.log('Rendering upsell, allServiceAnswers:', allServiceAnswers);
                 renderStep('upsell_services');
                 return;
             }
@@ -1032,7 +1072,7 @@
                 if (selectedServiceKeys.indexOf(svc) === -1) {
                     selectedServiceKeys.push(svc);
                     if (serviceInfo[svc]) {
-                        selectedServices.push(serviceInfo[svc].label + ' (included)');
+                        selectedServices.push(serviceInfo[svc].label);
                     }
                 }
             });
