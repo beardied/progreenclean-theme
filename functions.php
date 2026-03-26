@@ -1546,6 +1546,18 @@ function pgc_ajax_calculate_quote_v3() {
         }
     }
     
+    // Oven cleaning price for End of Tenancy
+    if ($service === 'end-of-tenancy' && isset($answers['oven_size'])) {
+        $ovenType = is_array($answers['oven_size']) ? ($answers['oven_size']['value'] ?? '') : '';
+        if ($ovenType) {
+            $ovenPrice = pgc_get_price('ow_price_oven_' . $ovenType);
+            if ($ovenPrice > 0) {
+                $total += $ovenPrice;
+                $breakdown[] = ['label' => 'Oven cleaning (' . $ovenType . ')', 'price' => $ovenPrice];
+            }
+        }
+    }
+    
     // Hourly rate calculations
     if ($service === 'domestic-cleaning' && isset($answers['dom_hours'])) {
         $hours = intval($answers['dom_hours']['value'] ?? 2);
@@ -1579,6 +1591,18 @@ function pgc_ajax_calculate_quote_v3() {
                 if ($addonPrice > 0) {
                     $total += $addonPrice;
                     $breakdown[] = ['label' => ucfirst($addon['value']), 'price' => $addonPrice];
+                }
+            }
+        }
+        
+        // Oven cleaning price
+        if (isset($answers['oven_size'])) {
+            $ovenType = is_array($answers['oven_size']) ? ($answers['oven_size']['value'] ?? '') : '';
+            if ($ovenType) {
+                $ovenPrice = pgc_get_price('ow_price_oven_' . $ovenType);
+                if ($ovenPrice > 0) {
+                    $total += $ovenPrice;
+                    $breakdown[] = ['label' => 'Oven cleaning (' . $ovenType . ')', 'price' => $ovenPrice];
                 }
             }
         }
