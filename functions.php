@@ -1387,10 +1387,9 @@ function pgc_ajax_calculate_quote_v3() {
             $external_price = $base_price;
         }
         
-        // Calculate internal price (with markup)
+        // Calculate internal price (same price as external - no markup)
         if ($internal_external === 'internal' || $internal_external === 'both') {
-            $internal_markup = pgc_get_price('ow_win_internal_markup') / 100;
-            $internal_price = $base_price * (1 + $internal_markup);
+            $internal_price = $base_price;
         }
         
         $window_subtotal = $external_price + $internal_price;
@@ -1402,29 +1401,10 @@ function pgc_ajax_calculate_quote_v3() {
             $breakdown[] = ['label' => 'Internal Windows (' . $bedrooms . ' bed, ' . $frequency . ')', 'price' => $internal_price];
         } else {
             $breakdown[] = ['label' => 'External Windows (' . $bedrooms . ' bed, ' . $frequency . ')', 'price' => $external_price];
-            $breakdown[] = ['label' => 'Internal Windows (' . $bedrooms . ' bed + ' . pgc_get_price('ow_win_internal_markup') . '%)', 'price' => $internal_price];
+            $breakdown[] = ['label' => 'Internal Windows (' . $bedrooms . ' bed, ' . $frequency . ')', 'price' => $internal_price];
         }
         
         $total = $window_subtotal;
-        
-        // First clean percentage (only for scheduled cleans, not one-off)
-        if ($frequency !== 'one-off') {
-            $apply_first_clean = false;
-            if ($frequency === '4-weekly' && pgc_get_price('ow_win_first_clean_4week')) {
-                $apply_first_clean = true;
-            } elseif ($frequency === '8-weekly' && pgc_get_price('ow_win_first_clean_8week')) {
-                $apply_first_clean = true;
-            } elseif ($frequency === '12-weekly' && pgc_get_price('ow_win_first_clean_12week')) {
-                $apply_first_clean = true;
-            }
-            
-            if ($apply_first_clean) {
-                $first_clean_pct = pgc_get_price('ow_win_first_clean_pct') / 100;
-                $first_clean_amount = $window_subtotal * $first_clean_pct;
-                $breakdown[] = ['label' => 'First Clean Surcharge (' . pgc_get_price('ow_win_first_clean_pct') . '%)', 'price' => $first_clean_amount];
-                $total += $first_clean_amount;
-            }
-        }
         
         // Addons by bedroom
         if (isset($answers['win_extension']) && $answers['win_extension']['value'] === 'yes') {

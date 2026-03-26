@@ -19,23 +19,6 @@ $pgc_pricing_sections = [
             ['label' => '5 Bedrooms', 'keys' => ['ow_win_5bed_oneoff', 'ow_win_5bed_4week', 'ow_win_5bed_8week', 'ow_win_5bed_12week', 'ow_win_ext_5bed', 'ow_win_cons_5bed']],
         ]
     ],
-    'Window Cleaning - First Clean Settings' => [
-        'description' => 'First clean percentage and frequency application settings',
-        'type' => 'settings',
-        'fields' => [
-            ['key' => 'ow_win_first_clean_pct', 'label' => 'First Clean Percentage (e.g., 50 for +50%)', 'type' => 'percent'],
-            ['key' => 'ow_win_first_clean_4week', 'label' => 'Apply to 4 Weekly', 'type' => 'checkbox'],
-            ['key' => 'ow_win_first_clean_8week', 'label' => 'Apply to 8 Weekly', 'type' => 'checkbox'],
-            ['key' => 'ow_win_first_clean_12week', 'label' => 'Apply to 12 Weekly', 'type' => 'checkbox'],
-        ]
-    ],
-    'Window Cleaning - Internal Windows' => [
-        'description' => 'Internal window pricing settings',
-        'type' => 'settings',
-        'fields' => [
-            ['key' => 'ow_win_internal_markup', 'label' => 'Internal Windows Markup Percentage (e.g., 25 for +25%)', 'type' => 'percent'],
-        ]
-    ],
     'Window Cleaning - Conservatory Roof' => [
         'description' => 'Conservatory roof size definitions and pricing (Internal & External)',
         'type' => 'settings',
@@ -163,13 +146,6 @@ $pgc_default_pricing = [
     'ow_win_5bed_12week' => 43.50,
     'ow_win_ext_5bed' => 6.00,
     'ow_win_cons_5bed' => 14.00,
-    
-    // Window Cleaning - Settings
-    'ow_win_first_clean_pct' => 50,
-    'ow_win_first_clean_4week' => 0,
-    'ow_win_first_clean_8week' => 0,
-    'ow_win_first_clean_12week' => 0,
-    'ow_win_internal_markup' => 25,
     
     // Window Cleaning - Conservatory Roof Sizes & Prices
     'ow_win_cons_roof_small_size' => '3x3m',
