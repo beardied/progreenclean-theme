@@ -46,7 +46,6 @@
                 'win_skylights_qty': 'Number of sky lights',
                 'win_conservatory_check': 'Conservatory',
                 'win_cons_size': 'Conservatory size',
-                'win_cons_roof_type': 'Conservatory roof type',
                 'win_cons_roof_clean': 'Conservatory roof clean',
                 'win_velux_check': 'Velux windows',
                 'win_velux_qty': 'Number of Velux windows',
@@ -206,16 +205,8 @@
             question: 'Would you like the roof of your conservatory cleaned?',
             type: 'single',
             options: [
-                { value: 'yes', label: 'Yes', next: 'win_cons_roof_type' },
+                { value: 'yes', label: 'Yes', next: 'win_cons_size' },
                 { value: 'no', label: 'No', next: 'win_velux_check' }
-            ]
-        },
-        'win_cons_roof_type': {
-            question: 'What type of roof does your conservatory have?',
-            type: 'single',
-            options: [
-                { value: 'glass', label: 'Glass/Transparent Roof', next: 'win_cons_size' },
-                { value: 'tiled', label: 'Tiled/Opaque Roof', next: 'win_cons_size' }
             ]
         },
         'win_cons_size': {

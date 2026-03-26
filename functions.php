@@ -1428,7 +1428,6 @@ function pgc_ajax_calculate_quote_v3() {
         // Conservatory Roof - Size based with Internal/External pricing
         if (isset($answers['win_cons_roof_clean']) && $answers['win_cons_roof_clean']['value'] === 'yes' && isset($answers['win_cons_size'])) {
             $cons_size = $answers['win_cons_size']['value']; // small, medium, large
-            $roof_type = $answers['win_cons_roof_type']['value'] ?? 'glass'; // glass or tiled
             $roof_external_price = 0;
             $roof_internal_price = 0;
             
@@ -1439,12 +1438,11 @@ function pgc_ajax_calculate_quote_v3() {
                 $size_label .= ' (' . $size_def . ')';
             }
             
-            // Calculate based on internal/external selection AND roof type
-            // If roof is tiled, only external cleaning is possible
+            // Calculate based on internal/external selection
             if ($internal_external === 'external' || $internal_external === 'both') {
                 $roof_external_price = pgc_get_price('ow_win_cons_roof_' . $cons_size . '_ext');
             }
-            if (($internal_external === 'internal' || $internal_external === 'both') && $roof_type === 'glass') {
+            if ($internal_external === 'internal' || $internal_external === 'both') {
                 $roof_internal_price = pgc_get_price('ow_win_cons_roof_' . $cons_size . '_int');
             }
             
