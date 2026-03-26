@@ -180,6 +180,7 @@ function pgc_render_settings_page() {
         update_option('pgc_contact_email', sanitize_email($_POST['contact_email']));
         update_option('pgc_from_email', sanitize_email($_POST['from_email']));
         update_option('pgc_phone', sanitize_text_field($_POST['phone']));
+        update_option('pgc_opening_hours', sanitize_textarea_field($_POST['opening_hours']));
         echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
     }
     
@@ -187,6 +188,7 @@ function pgc_render_settings_page() {
     $contact_email = get_option('pgc_contact_email', get_option('admin_email'));
     $from_email = get_option('pgc_from_email', 'quotes@progreenclean.co.uk');
     $phone = get_option('pgc_phone', '0800 123 4567');
+    $opening_hours = get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed");
     ?>
     <div class="wrap">
         <h1>ProGreenClean Settings</h1>
@@ -211,6 +213,11 @@ function pgc_render_settings_page() {
                 <tr>
                     <th><label for="phone">Company Phone</label></th>
                     <td><input type="text" id="phone" name="phone" value="<?php echo esc_attr($phone); ?>" class="regular-text"></td>
+                </tr>
+                <tr>
+                    <th><label for="opening_hours">Opening Hours</label></th>
+                    <td><textarea id="opening_hours" name="opening_hours" rows="4" class="regular-text" style="font-family: monospace;"><?php echo esc_textarea($opening_hours); ?></textarea>
+                        <p class="description">Displayed in footer, contact page, and emails. Enter each day on a new line.</p></td>
                 </tr>
             </table>
             <?php submit_button('Save Settings', 'primary', 'pgc_save_settings'); ?>

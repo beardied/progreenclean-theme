@@ -41,14 +41,7 @@ add_action('admin_menu', function (): void {
         'pgc_admin_quotes'
     );
     
-    add_submenu_page(
-        'progreenclean',
-        __('Settings', 'progreenclean'),
-        __('Settings', 'progreenclean'),
-        'manage_options',
-        'progreenclean-settings',
-        'pgc_admin_settings'
-    );
+
 });
 
 /**
@@ -110,13 +103,6 @@ function pgc_admin_pricing(): void {
         );
         
         echo '<div class="notice notice-success"><p>' . esc_html__('Pricing saved successfully!', 'progreenclean') . '</p></div>';
-    }
-    
-    // Handle contact settings save
-    if (isset($_POST['pgc_save_contact_settings']) && check_admin_referer('pgc_contact_settings_nonce')) {
-        update_option('pgc_contact_email', sanitize_email($_POST['pgc_contact_email'] ?? ''));
-        update_option('pgc_opening_hours', sanitize_textarea_field($_POST['pgc_opening_hours'] ?? ''));
-        echo '<div class="notice notice-success"><p>' . esc_html__('Contact settings saved!', 'progreenclean') . '</p></div>';
     }
     
     // Handle delete
@@ -233,32 +219,6 @@ function pgc_admin_pricing(): void {
                 </tbody>
             </table>
         <?php endforeach; ?>
-        
-        <hr style="margin: 40px 0;">
-        
-        <h2><?php _e('Contact Settings', 'progreenclean'); ?></h2>
-        <form method="post">
-            <?php wp_nonce_field('pgc_contact_settings_nonce'); ?>
-            <table class="form-table">
-                <tr>
-                    <th><label for="pgc_contact_email"><?php _e('Contact Email', 'progreenclean'); ?></label></th>
-                    <td>
-                        <input type="email" name="pgc_contact_email" id="pgc_contact_email" value="<?php echo esc_attr(get_option('pgc_contact_email', '')); ?>" class="regular-text">
-                        <p class="description"><?php _e('Email address used for quote notifications and contact forms', 'progreenclean'); ?></p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><label for="pgc_opening_hours"><?php _e('Opening Hours', 'progreenclean'); ?></label></th>
-                    <td>
-                        <textarea name="pgc_opening_hours" id="pgc_opening_hours" rows="4" class="regular-text" style="font-family: monospace;"><?php echo esc_textarea(get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed")); ?></textarea>
-                        <p class="description"><?php _e('Displayed in footer, contact page, and emails', 'progreenclean'); ?></p>
-                    </td>
-                </tr>
-            </table>
-            <p class="submit">
-                <input type="submit" name="pgc_save_contact_settings" class="button button-primary" value="<?php _e('Save Contact Settings', 'progreenclean'); ?>">
-            </p>
-        </form>
     </div>
     <?php
 }
@@ -379,63 +339,4 @@ function pgc_admin_quotes(): void {
     <?php
 }
 
-/**
- * Settings Page
- */
-function pgc_admin_settings(): void {
-    ?>
-    <div class="wrap">
-        <h1><?php _e('ProGreenClean Settings', 'progreenclean'); ?></h1>
-        <form method="post" action="options.php">
-            <?php
-            settings_fields('pgc_settings');
-            do_settings_sections('progreenclean-settings');
-            submit_button();
-            ?>
-        </form>
-    </div>
-    <?php
-}
 
-/**
- * Register settings
- */
-add_action('admin_init', function (): void {
-    register_setting('pgc_settings', 'pgc_business_name');
-    register_setting('pgc_settings', 'pgc_phone');
-    register_setting('pgc_settings', 'pgc_email');
-    register_setting('pgc_settings', 'pgc_contact_email');
-    register_setting('pgc_settings', 'pgc_address');
-    register_setting('pgc_settings', 'pgc_postcode');
-    register_setting('pgc_settings', 'pgc_opening_hours');
-    register_setting('pgc_settings', 'pgc_google_reviews_url');
-    
-    add_settings_section('pgc_general', __('General Settings', 'progreenclean'), function (): void {
-        echo '<p>' . __('Configure your business details.', 'progreenclean') . '</p>';
-    }, 'progreenclean-settings');
-    
-    // Regular text fields
-    $fields = [
-        'pgc_business_name' => __('Business Name', 'progreenclean'),
-        'pgc_phone' => __('Phone Number', 'progreenclean'),
-        'pgc_email' => __('Email Address', 'progreenclean'),
-        'pgc_contact_email' => __('Contact Email (for quotes/forms)', 'progreenclean'),
-        'pgc_address' => __('Street Address', 'progreenclean'),
-        'pgc_postcode' => __('Postcode', 'progreenclean'),
-        'pgc_google_reviews_url' => __('Google Reviews URL', 'progreenclean'),
-    ];
-    
-    foreach ($fields as $field => $label) {
-        add_settings_field($field, $label, function ($args) use ($field): void {
-            $value = get_option($field);
-            printf('<input type="text" name="%s" value="%s" class="regular-text">', esc_attr($field), esc_attr($value));
-        }, 'progreenclean-settings', 'pgc_general', ['field' => $field]);
-    }
-    
-    // Opening hours textarea field
-    add_settings_field('pgc_opening_hours', __('Opening Hours', 'progreenclean'), function (): void {
-        $value = get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed");
-        printf('<textarea name="pgc_opening_hours" rows="4" class="regular-text" style="font-family: monospace;">%s</textarea>', esc_textarea($value));
-        echo '<p class="description">Enter each day/time on a new line. Use HTML &lt;br&gt; for line breaks in display.</p>';
-    }, 'progreenclean-settings', 'pgc_general');
-});
