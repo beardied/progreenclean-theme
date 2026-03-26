@@ -1435,6 +1435,14 @@
     function showQuoteAndContactForm() {
         const container = $('#quote-wizard-container');
         
+        // Scroll to top of wizard container for mobile users
+        const wizardContainer = document.getElementById('quote-wizard-container');
+        if (wizardContainer) {
+            wizardContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Also scroll window to ensure we're at the top
+            window.scrollTo({ top: wizardContainer.offsetTop - 100, behavior: 'smooth' });
+        }
+        
         // Calculate grand total from all services
         let grandTotal = 0;
         for (let i = 0; i < serviceCalculations.length; i++) {
@@ -1576,6 +1584,13 @@
     
     function showContactForm() {
         const container = $('#quote-wizard-container');
+        
+        // Scroll to top of wizard container for mobile users
+        const wizardContainer = document.getElementById('quote-wizard-container');
+        if (wizardContainer) {
+            wizardContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({ top: wizardContainer.offsetTop - 100, behavior: 'smooth' });
+        }
         
         let html = '<form id="quote-contact-form">';
         
