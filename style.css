@@ -1375,3 +1375,173 @@ a:hover { color: var(--pgc-primary-dark); }
     line-height: 1.6;
     font-size: 14px;
 }
+
+/* About Us - Team Section Styles */
+.pgc-team-section {
+    background: linear-gradient(135deg, var(--pgc-gray-50) 0%, var(--pgc-white) 100%);
+    padding: 100px 0;
+}
+
+.pgc-team-section h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--pgc-gray-900);
+    margin-bottom: 60px;
+    text-align: center;
+}
+
+.pgc-team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (max-width: 991px) {
+    .pgc-team-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .pgc-team-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}
+
+.pgc-team-card {
+    background: var(--pgc-white);
+    border-radius: 20px;
+    padding: 40px 30px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--pgc-gray-100);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pgc-team-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.pgc-team-photo {
+    margin-bottom: 24px;
+}
+
+.pgc-team-photo img {
+    width: 200px !important;
+    height: 200px !important;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid var(--pgc-white);
+    box-shadow: 0 8px 24px rgba(8, 145, 178, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.pgc-team-card:hover .pgc-team-photo img {
+    transform: scale(1.05);
+}
+
+.pgc-team-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--pgc-gray-900);
+    margin: 0 0 8px 0;
+}
+
+.pgc-team-role {
+    color: var(--pgc-primary);
+    font-size: 0.95rem;
+    margin: 0 0 20px 0;
+}
+
+.pgc-team-role strong {
+    font-weight: 600;
+}
+
+.pgc-team-card p:last-child {
+    color: var(--pgc-gray-600);
+    line-height: 1.7;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* About Us - Features Section */
+.pgc-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    max-width: 1200px;
+    margin: 60px auto 0;
+}
+
+@media (max-width: 767px) {
+    .pgc-features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pgc-features-grid h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--pgc-gray-900);
+    margin: 0 0 16px 0;
+    position: relative;
+    padding-bottom: 12px;
+}
+
+.pgc-features-grid h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%);
+    border-radius: 2px;
+}
+
+.pgc-features-grid p {
+    color: var(--pgc-gray-600);
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* CTA Section Enhancement */
+.pgc-cta {
+    background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%);
+    padding: 100px 20px;
+    text-align: center;
+    border-radius: 0;
+}
+
+.pgc-cta__headline {
+    color: #fff;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0 0 20px 0;
+}
+
+.pgc-cta__description {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+    margin: 0 0 40px 0;
+}
+
+.pgc-cta .wp-block-button__link {
+    background: #fff;
+    color: var(--pgc-primary);
+    padding: 16px 40px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: inline-block;
+}
+
+.pgc-cta .wp-block-button__link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
