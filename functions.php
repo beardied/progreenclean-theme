@@ -764,12 +764,13 @@ function pgc_get_email_header() {
 
 function pgc_get_email_footer() {
     $phone = get_option('pgc_phone', '0800 123 4567');
+    $email = get_option('pgc_contact_email', get_option('pgc_email', 'info@progreenclean.co.uk'));
     return '</td>
                     </tr>
                     <tr>
                         <td style="background: #1e293b; padding: 32px; text-align: center; color: #94a3b8; font-size: 14px;">
                             <p style="margin: 0 0 8px 0;">ProGreenClean - Professional Eco-Friendly Cleaning</p>
-                            <p style="margin: 0;">Phone: ' . $phone . ' | Email: info@progreenclean.co.uk</p>
+                            <p style="margin: 0;">Phone: ' . esc_html($phone) . ' | Email: ' . esc_html($email) . '</p>
                         </td>
                     </tr>
                 </table>
@@ -1009,19 +1010,65 @@ add_shortcode('pgc_phone_link', function($atts) {
 });
 
 /**
+ * Email Display Shortcode - Just the email address text
+ * Usage: [pgc_email] or [pgc_email type="contact"] or [pgc_email type="general"]
+ * Displays: The email address as plain text
+ */
+add_shortcode('pgc_email', function($atts) {
+    $atts = shortcode_atts([
+        'type' => 'contact', // 'contact' or 'general'
+    ], $atts);
+    
+    if ($atts['type'] === 'general') {
+        $email = get_option('pgc_email', 'info@progreenclean.co.uk');
+    } else {
+        $email = get_option('pgc_contact_email', get_option('pgc_email', 'info@progreenclean.co.uk'));
+    }
+    
+    return esc_html($email);
+});
+
+/**
  * Email Link Shortcode - Clickable email
- * Usage: [pgc_email_link class="optional-css-class"]
+ * Usage: [pgc_email_link class="optional-css-class" type="contact"]
  * Displays: The email address as clickable text with mailto: link
  */
 add_shortcode('pgc_email_link', function($atts) {
     $atts = shortcode_atts([
         'class' => '',
+        'type' => 'contact', // 'contact' or 'general'
     ], $atts);
     
-    $email = get_option('pgc_contact_email', 'info@progreenclean.co.uk');
+    if ($atts['type'] === 'general') {
+        $email = get_option('pgc_email', 'info@progreenclean.co.uk');
+    } else {
+        $email = get_option('pgc_contact_email', get_option('pgc_email', 'info@progreenclean.co.uk'));
+    }
+    
     $class = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
     
     return '<a href="mailto:' . esc_attr($email) . '"' . $class . '>' . esc_html($email) . '</a>';
+});
+
+/**
+ * Opening Hours Shortcode
+ * Usage: [pgc_opening_hours] or [pgc_opening_hours format="html"]
+ * Displays: Opening hours with optional HTML formatting
+ */
+add_shortcode('pgc_opening_hours', function($atts) {
+    $atts = shortcode_atts([
+        'format' => 'text', // 'text' or 'html'
+    ], $atts);
+    
+    $hours = get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed");
+    
+    if ($atts['format'] === 'html') {
+        // Convert newlines to <br> tags
+        $hours = nl2br(esc_html($hours));
+        return '<span class="pgc-opening-hours">' . $hours . '</span>';
+    }
+    
+    return esc_html($hours);
 });
 
 /**

@@ -12,6 +12,69 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Format opening hours for Schema.org
+ * Converts user-friendly format to Schema.org format
+ */
+function pgc_format_opening_hours_for_schema(): array {
+    $hours_text = get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed");
+    $lines = explode("\n", $hours_text);
+    $schema_hours = [];
+    
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line) || stripos($line, 'closed') !== false) {
+            continue;
+        }
+        
+        // Parse lines like "Mon-Fri: 8am-6pm" or "Saturday: 9:00 AM - 5:00 PM"
+        if (preg_match('/^(.*?):\s*(.+)$/i', $line, $matches)) {
+            $days = trim($matches[1]);
+            $time = trim($matches[2]);
+            
+            // Convert day ranges to schema format
+            $days = str_ireplace(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], 
+                                  ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'], $days);
+            $days = str_ireplace(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], 
+                                  ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'], $days);
+            $days = str_replace(['-', ' to '], '-', $days);
+            
+            // Convert time to 24-hour format
+            $time = preg_replace('/\s*/', '', $time); // Remove spaces
+            $time = str_ireplace(['am', 'pm'], ['AM', 'PM'], $time);
+            
+            // Convert to 24-hour format if needed
+            if (preg_match('/(\d{1,2}):?(\d{2})?(AM|PM)-(\d{1,2}):?(\d{2})?(AM|PM)/i', $time, $time_matches)) {
+                $start_hour = intval($time_matches[1]);
+                $start_min = $time_matches[2] ?: '00';
+                $start_ampm = strtoupper($time_matches[3]);
+                $end_hour = intval($time_matches[4]);
+                $end_min = $time_matches[5] ?: '00';
+                $end_ampm = strtoupper($time_matches[6]);
+                
+                if ($start_ampm === 'PM' && $start_hour !== 12) {
+                    $start_hour += 12;
+                }
+                if ($start_ampm === 'AM' && $start_hour === 12) {
+                    $start_hour = 0;
+                }
+                if ($end_ampm === 'PM' && $end_hour !== 12) {
+                    $end_hour += 12;
+                }
+                if ($end_ampm === 'AM' && $end_hour === 12) {
+                    $end_hour = 0;
+                }
+                
+                $time = sprintf('%02d:%s-%02d:%s', $start_hour, $start_min, $end_hour, $end_min);
+            }
+            
+            $schema_hours[] = $days . ' ' . $time;
+        }
+    }
+    
+    return $schema_hours ?: ['Mo-Fr 08:00-18:00', 'Sa 09:00-14:00'];
+}
+
+/**
  * Output LocalBusiness Schema
  */
 function pgc_get_localbusiness_schema(): array {
@@ -23,7 +86,7 @@ function pgc_get_localbusiness_schema(): array {
         'description' => 'Professional eco-friendly cleaning services in Epsom and Surrey',
         'url' => home_url(),
         'telephone' => get_option('pgc_phone', ''),
-        'email' => 'info@progreenclean.co.uk',
+        'email' => get_option('pgc_contact_email', get_option('pgc_email', 'info@progreenclean.co.uk')),
         'address' => [
             '@type' => 'PostalAddress',
             'streetAddress' => get_option('pgc_street_address', ''),
@@ -60,7 +123,7 @@ function pgc_get_localbusiness_schema(): array {
             'Solar Panel Cleaning',
             'Graffiti Removal',
         ],
-        'openingHours' => ['Mo-Fr 08:00-18:00', 'Sa 09:00-14:00'],
+        'openingHours' => pgc_format_opening_hours_for_schema(),
         'priceRange' => '££',
         'paymentAccepted' => ['Cash', 'Credit Card', 'Bank Transfer'],
         'currenciesAccepted' => 'GBP',

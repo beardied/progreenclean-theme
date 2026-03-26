@@ -371,18 +371,22 @@ add_action('admin_init', function (): void {
     register_setting('pgc_settings', 'pgc_business_name');
     register_setting('pgc_settings', 'pgc_phone');
     register_setting('pgc_settings', 'pgc_email');
+    register_setting('pgc_settings', 'pgc_contact_email');
     register_setting('pgc_settings', 'pgc_address');
     register_setting('pgc_settings', 'pgc_postcode');
+    register_setting('pgc_settings', 'pgc_opening_hours');
     register_setting('pgc_settings', 'pgc_google_reviews_url');
     
     add_settings_section('pgc_general', __('General Settings', 'progreenclean'), function (): void {
         echo '<p>' . __('Configure your business details.', 'progreenclean') . '</p>';
     }, 'progreenclean-settings');
     
+    // Regular text fields
     $fields = [
         'pgc_business_name' => __('Business Name', 'progreenclean'),
         'pgc_phone' => __('Phone Number', 'progreenclean'),
         'pgc_email' => __('Email Address', 'progreenclean'),
+        'pgc_contact_email' => __('Contact Email (for quotes/forms)', 'progreenclean'),
         'pgc_address' => __('Street Address', 'progreenclean'),
         'pgc_postcode' => __('Postcode', 'progreenclean'),
         'pgc_google_reviews_url' => __('Google Reviews URL', 'progreenclean'),
@@ -394,4 +398,11 @@ add_action('admin_init', function (): void {
             printf('<input type="text" name="%s" value="%s" class="regular-text">', esc_attr($field), esc_attr($value));
         }, 'progreenclean-settings', 'pgc_general', ['field' => $field]);
     }
+    
+    // Opening hours textarea field
+    add_settings_field('pgc_opening_hours', __('Opening Hours', 'progreenclean'), function (): void {
+        $value = get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed");
+        printf('<textarea name="pgc_opening_hours" rows="4" class="regular-text" style="font-family: monospace;">%s</textarea>', esc_textarea($value));
+        echo '<p class="description">Enter each day/time on a new line. Use HTML &lt;br&gt; for line breaks in display.</p>';
+    }, 'progreenclean-settings', 'pgc_general');
 });
