@@ -11,6 +11,8 @@
     let calculatedPrice = 0;
     let priceBreakdown = [];
     let stepHistory = [];
+    let allServiceAnswers = {};
+    let currentServiceKey = 'service_1';
     
     // Service display names and icons
     const serviceInfo = {
@@ -700,10 +702,6 @@
             }
         });
         
-        // Store answers for each service separately
-        let allServiceAnswers = {};
-        let currentServiceKey = 'service_1';
-        
         // Handle upsell service selection - when clicking a service in upsell step
         $(document).on('click', '.quote-option[data-step="upsell_services"]', function(e) {
             e.stopPropagation(); // Prevent the regular quote-option handler
@@ -901,14 +899,22 @@
         }
         // Special handling for upsell step
         else if (step.type === 'upsell') {
-            // Get already selected services with their labels
+            // Get already selected services from allServiceAnswers + current answers
             const selectedServices = [];
             const selectedServiceKeys = [];
-            for (const key in answers) {
-                if (key === 'service_selection' || key.startsWith('additional_service_')) {
-                    selectedServices.push(answers[key].label);
-                    selectedServiceKeys.push(answers[key].value);
+            
+            // Add from allServiceAnswers (previously completed services)
+            for (const key in allServiceAnswers) {
+                if (key.startsWith('service_')) {
+                    selectedServices.push(allServiceAnswers[key].serviceLabel);
+                    selectedServiceKeys.push(allServiceAnswers[key].service);
                 }
+            }
+            
+            // Add current service being worked on
+            if (answers['service_selection']) {
+                selectedServices.push(answers['service_selection'].label);
+                selectedServiceKeys.push(answers['service_selection'].value);
             }
             
             // Show selected services
@@ -930,8 +936,8 @@
             const serviceOptions = questionFlow['service_selection'].options;
             
             serviceOptions.forEach(function(opt) {
-                // Skip already selected services and services that go to contact_form
-                if (selectedServiceKeys.indexOf(opt.value) === -1 && opt.next !== 'contact_form') {
+                // Skip already selected services only
+                if (selectedServiceKeys.indexOf(opt.value) === -1) {
                     html += '<div class="quote-option" data-step="' + stepId + '" data-value="' + opt.value + '" data-next="' + opt.next + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
                     html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + opt.label + '</div>';
                     html += '</div>';
