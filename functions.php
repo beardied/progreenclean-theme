@@ -179,6 +179,7 @@ function pgc_render_settings_page() {
         update_option('pgc_quote_email', sanitize_email($_POST['quote_email']));
         update_option('pgc_contact_email', sanitize_email($_POST['contact_email']));
         update_option('pgc_from_email', sanitize_email($_POST['from_email']));
+        update_option('pgc_display_email', sanitize_email($_POST['display_email']));
         update_option('pgc_phone', sanitize_text_field($_POST['phone']));
         update_option('pgc_opening_hours', sanitize_textarea_field($_POST['opening_hours']));
         echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
@@ -187,6 +188,7 @@ function pgc_render_settings_page() {
     $quote_email = get_option('pgc_quote_email', get_option('admin_email'));
     $contact_email = get_option('pgc_contact_email', get_option('admin_email'));
     $from_email = get_option('pgc_from_email', 'quotes@progreenclean.co.uk');
+    $display_email = get_option('pgc_display_email', 'info@progreenclean.co.uk');
     $phone = get_option('pgc_phone', '0800 123 4567');
     $opening_hours = get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed");
     ?>
@@ -209,6 +211,11 @@ function pgc_render_settings_page() {
                     <th><label for="from_email">From Email Address</label></th>
                     <td><input type="email" id="from_email" name="from_email" value="<?php echo esc_attr($from_email); ?>" class="regular-text">
                         <p class="description">Email address shown as sender for customer emails</p></td>
+                </tr>
+                <tr>
+                    <th><label for="display_email">Display Email Address</label></th>
+                    <td><input type="email" id="display_email" name="display_email" value="<?php echo esc_attr($display_email); ?>" class="regular-text">
+                        <p class="description">Email address displayed on website footer, contact page, and email footers</p></td>
                 </tr>
                 <tr>
                     <th><label for="phone">Company Phone</label></th>
@@ -771,7 +778,7 @@ function pgc_get_email_header() {
 
 function pgc_get_email_footer() {
     $phone = get_option('pgc_phone', '0800 123 4567');
-    $email = get_option('pgc_contact_email', get_option('pgc_email', 'info@progreenclean.co.uk'));
+    $email = get_option('pgc_display_email', 'info@progreenclean.co.uk');
     return '</td>
                     </tr>
                     <tr>
@@ -1018,39 +1025,25 @@ add_shortcode('pgc_phone_link', function($atts) {
 
 /**
  * Email Display Shortcode - Just the email address text
- * Usage: [pgc_email] or [pgc_email type="contact"] or [pgc_email type="general"]
+ * Usage: [pgc_email] - Display email (uses Display Email setting)
  * Displays: The email address as plain text
  */
 add_shortcode('pgc_email', function($atts) {
-    $atts = shortcode_atts([
-        'type' => 'contact', // 'contact' or 'general'
-    ], $atts);
-    
-    if ($atts['type'] === 'general') {
-        $email = get_option('pgc_email', 'info@progreenclean.co.uk');
-    } else {
-        $email = get_option('pgc_contact_email', get_option('pgc_email', 'info@progreenclean.co.uk'));
-    }
-    
+    $email = get_option('pgc_display_email', 'info@progreenclean.co.uk');
     return esc_html($email);
 });
 
 /**
  * Email Link Shortcode - Clickable email
- * Usage: [pgc_email_link class="optional-css-class" type="contact"]
+ * Usage: [pgc_email_link class="optional-css-class"]
  * Displays: The email address as clickable text with mailto: link
  */
 add_shortcode('pgc_email_link', function($atts) {
     $atts = shortcode_atts([
         'class' => '',
-        'type' => 'contact', // 'contact' or 'general'
     ], $atts);
     
-    if ($atts['type'] === 'general') {
-        $email = get_option('pgc_email', 'info@progreenclean.co.uk');
-    } else {
-        $email = get_option('pgc_contact_email', get_option('pgc_email', 'info@progreenclean.co.uk'));
-    }
+    $email = get_option('pgc_display_email', 'info@progreenclean.co.uk');
     
     $class = $atts['class'] ? ' class="' . esc_attr($atts['class']) . '"' : '';
     
