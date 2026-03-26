@@ -81,7 +81,7 @@
                 'carpet_stairs': 'Stairs/landing',
                 'carpet_parking': 'Parking',
                 'oven_size': 'Oven size',
-                'oven_extras': 'Additional appliances',
+
                 'pw_location': 'Pressure washing location'
             };
             
@@ -542,17 +542,6 @@
                 { value: 'aga', label: 'AGA Oven', priceKey: 'ow_price_oven_aga', next: 'dynamic_oven_next' }
             ]
         },
-        'oven_extras': {
-            question: 'Other appliance cleaning?',
-            type: 'single',
-            priceField: true,
-            options: [
-                { value: 'fridge', label: 'Fridge', priceKey: 'ow_price_fridge', next: 'display_quote' },
-                { value: 'microwave', label: 'Microwave', priceKey: 'ow_price_microwave', next: 'display_quote' },
-                { value: 'none', label: 'No', next: 'display_quote' }
-            ]
-        },
-        
         // Fridge Cleaning Flow - Single price, auto-selected
         'fridge_cleaning_single': {
             question: 'Fridge Cleaning',
@@ -633,16 +622,6 @@
                     includedServices.push('carpet-cleaning');
                 }
             }
-            // Track fridge/microwave from oven_extras step
-            if (step === 'oven_extras') {
-                if (value === 'fridge' && includedServices.indexOf('fridge-cleaning') === -1) {
-                    includedServices.push('fridge-cleaning');
-                }
-                if (value === 'microwave' && includedServices.indexOf('microwave-cleaning') === -1) {
-                    includedServices.push('microwave-cleaning');
-                }
-            }
-            
             // Add to history
             stepHistory.push(currentStep);
             
@@ -682,12 +661,8 @@
                 stepHistory = [];
                 renderStep('upsell_services');
             } else if (next === 'dynamic_oven_next') {
-                // Check if we came from multi-select addons
-                if (answers['dom_addons_has_oven'] || answers['eot_addons_has_oven']) {
-                    calculateAndShowQuote();
-                } else {
-                    renderStep('oven_extras');
-                }
+                // Go straight to upsell - no more oven extras question
+                renderStep('display_quote');
             } else {
                 renderStep(next);
             }
