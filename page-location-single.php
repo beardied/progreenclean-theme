@@ -73,7 +73,7 @@ if ($services_page) {
                 <div class="pgc-card" style="padding: 35px; margin-bottom: 30px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); border-radius: 16px;">
                     <h3 style="font-size: 1.4rem; font-weight: 700; color: #fff; margin: 0 0 12px 0;">Get a Free Quote</h3>
                     <p style="color: rgba(255,255,255,0.9); margin: 0 0 25px 0; font-size: 0.95rem; line-height: 1.6;">Get an instant estimate for your cleaning needs in <?php echo esc_html($location_name); ?>.</p>
-                    <a href="<?php echo home_url('/get-a-quote/'); ?>" class="pgc-btn" style="display: block; text-align: center; width: 100%; padding: 16px; font-size: 16px; background: #fff; color: var(--pgc-primary); text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.3s;">Get a Quote</a>
+                    <a href="<?php echo home_url('/get-a-quote/'); ?>" style="display: block; text-align: center; width: 100%; padding: 16px; font-size: 16px; background: #fff; color: var(--pgc-primary); text-decoration: none; border-radius: 10px; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s;">Get Your Quote →</a>
                 </div>
                 
                 <!-- Contact Card -->
@@ -168,6 +168,10 @@ if ($services_page) {
     border-color: var(--pgc-primary) !important;
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(8, 145, 178, 0.15);
+}
+.pgc-card a[href*="get-a-quote"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
 }
 @media (max-width: 991px) {
     .pgc-container > div[style*="grid-template-columns"] {
