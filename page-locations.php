@@ -1,7 +1,7 @@
 <?php
 /**
  * Template Name: Locations Hub
- * Description: Displays all location pages with editor content support
+ * Description: Displays all location pages that are children of this page
  */
 
 if (!defined('ABSPATH')) exit;
@@ -11,18 +11,14 @@ get_header();
 // Get editor content for above the grid
 $editor_content = apply_filters('the_content', get_post_field('post_content', get_the_ID()));
 
-// Get all location pages
+// Get all child pages of the current Locations page
+$parent_id = get_the_ID();
 $locations = get_posts([
     'post_type' => 'page',
     'posts_per_page' => -1,
     'orderby' => 'title',
     'order' => 'ASC',
-    'meta_query' => [
-        [
-            'key' => '_wp_page_template',
-            'value' => 'page-location-single.php'
-        ]
-    ]
+    'post_parent' => $parent_id
 ]);
 ?>
 
@@ -66,7 +62,7 @@ $locations = get_posts([
             <?php endforeach; ?>
         </div>
         <?php else : ?>
-        <p style="text-align: center; color: var(--pgc-gray-500);">No locations found.</p>
+        <p style="text-align: center; color: var(--pgc-gray-500);">No locations found. Please create location pages as children of this page.</p>
         <?php endif; ?>
         
     </div>
