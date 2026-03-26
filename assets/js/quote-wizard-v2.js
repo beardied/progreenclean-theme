@@ -582,6 +582,12 @@
                     answers: Object.assign({}, answers),
                     manualQuote: true
                 };
+                // Increment service key for next service
+                const currentNum = parseInt(currentServiceKey.replace('service_', ''));
+                currentServiceKey = 'service_' + (currentNum + 1);
+                // Clear answers for next service selection
+                answers = {};
+                stepHistory = [];
                 renderStep('upsell_services');
             } else if (next === 'dynamic_oven_next') {
                 // Check if we came from multi-select addons
@@ -717,44 +723,24 @@
             const next = $(this).data('next');
             const label = $(this).find('.option-label').text();
             
-            // Save current service answers
-            allServiceAnswers[currentServiceKey] = {
-                service: answers['service_selection'].value,
-                serviceLabel: answers['service_selection'].label,
-                answers: Object.assign({}, answers)
-            };
+            // Save current service answers (if there's a current service being worked on)
+            if (answers['service_selection']) {
+                allServiceAnswers[currentServiceKey] = {
+                    service: answers['service_selection'].value,
+                    serviceLabel: answers['service_selection'].label,
+                    answers: Object.assign({}, answers)
+                };
+            }
             
-            // Find the next service number
-            let serviceNum = 2;
+            // Find the next available service number
+            let maxNum = 0;
             for (const key in allServiceAnswers) {
                 if (key.startsWith('service_')) {
                     const num = parseInt(key.replace('service_', ''));
-                    if (num >= serviceNum) serviceNum = num + 1;
+                    if (num > maxNum) maxNum = num;
                 }
             }
-            currentServiceKey = 'service_' + serviceNum;
-            
-            // Reset answers for new service but keep track of all services
-            const newServiceAnswers = {
-                'service_selection': { value: value, label: label }
-            };
-            
-            // Track all services
-            if (!newServiceAnswers['all_services']) {
-                newServiceAnswers['all_services'] = [];
-            }
-            newServiceAnswers['all_services'].push({
-                value: value,
-                label: label,
-                key: currentServiceKey
-            });
-            
-            // Copy existing tracked services
-            for (const key in answers) {
-                if (key.startsWith('all_services')) {
-                    newServiceAnswers[key] = answers[key];
-                }
-            }
+            currentServiceKey = 'service_' + (maxNum + 1);
             
             // Check if this service goes straight to contact form (manual quote)
             if (next === 'contact_form') {
@@ -762,36 +748,47 @@
                 allServiceAnswers[currentServiceKey] = {
                     service: value,
                     serviceLabel: label,
-                    answers: newServiceAnswers,
+                    answers: { 'service_selection': { value: value, label: label } },
                     manualQuote: true
                 };
                 
+                // Find next key for future services
+                maxNum = 0;
+                for (const key in allServiceAnswers) {
+                    if (key.startsWith('service_')) {
+                        const num = parseInt(key.replace('service_', ''));
+                        if (num > maxNum) maxNum = num;
+                    }
+                }
+                currentServiceKey = 'service_' + (maxNum + 1);
+                
                 // Clear answers and go back to upsell
-                Object.keys(answers).forEach(key => delete answers[key]);
+                answers = {};
                 stepHistory = [];
                 renderStep('upsell_services');
                 return;
             }
             
-            // Clear and set new answers
-            Object.keys(answers).forEach(key => delete answers[key]);
-            Object.assign(answers, newServiceAnswers);
-            
+            // Start the new service flow with fresh answers
+            answers = {
+                'service_selection': { value: value, label: label }
+            };
             stepHistory = [];
             
-            // Start the new service flow
             renderStep(next);
         });
         
         // Handle upsell finish - show final quote
         $(document).on('click', '#upsell-finish', function() {
             stepHistory.push(currentStep);
-            // Save current service before calculating
-            allServiceAnswers[currentServiceKey] = {
-                service: answers['service_selection'].value,
-                serviceLabel: answers['service_selection'].label,
-                answers: Object.assign({}, answers)
-            };
+            // Save current service before calculating (if there's an active service being worked on)
+            if (answers['service_selection']) {
+                allServiceAnswers[currentServiceKey] = {
+                    service: answers['service_selection'].value,
+                    serviceLabel: answers['service_selection'].label,
+                    answers: Object.assign({}, answers)
+                };
+            }
             calculateAndShowQuote();
         });
         
@@ -926,19 +923,35 @@
             // Get already selected services from allServiceAnswers + current answers
             const selectedServices = [];
             const selectedServiceKeys = [];
+            const addedKeys = new Set(); // For deduplication
             
             // Add from allServiceAnswers (previously completed services)
             for (const key in allServiceAnswers) {
                 if (key.startsWith('service_')) {
-                    selectedServices.push(allServiceAnswers[key].serviceLabel);
-                    selectedServiceKeys.push(allServiceAnswers[key].service);
+                    const svc = allServiceAnswers[key].service;
+                    const label = allServiceAnswers[key].serviceLabel;
+                    if (!addedKeys.has(svc)) {
+                        selectedServices.push(label);
+                        selectedServiceKeys.push(svc);
+                        addedKeys.add(svc);
+                    }
                 }
             }
             
-            // Add current service being worked on
-            if (answers['service_selection']) {
-                selectedServices.push(answers['service_selection'].label);
-                selectedServiceKeys.push(answers['service_selection'].value);
+            // Add current service being worked on (if not already saved and not already in list)
+            if (answers['service_selection'] && !addedKeys.has(answers['service_selection'].value)) {
+                // Check if this service is already saved with a different key
+                let alreadySaved = false;
+                for (const key in allServiceAnswers) {
+                    if (key.startsWith('service_') && allServiceAnswers[key].service === answers['service_selection'].value) {
+                        alreadySaved = true;
+                        break;
+                    }
+                }
+                if (!alreadySaved) {
+                    selectedServices.push(answers['service_selection'].label);
+                    selectedServiceKeys.push(answers['service_selection'].value);
+                }
             }
             
             // Show selected services
@@ -1131,6 +1144,19 @@
         const service = serviceData.service;
         const serviceAnswers = serviceData.answers;
         
+        // Handle manual quote services (skip AJAX calculation)
+        if (serviceData.manualQuote) {
+            serviceCalculations.push({
+                service: service,
+                serviceLabel: serviceInfo[service]?.label || service,
+                price: 0,
+                breakdown: [],
+                manualQuote: true
+            });
+            calculateNextService(serviceKeys, index + 1, callback);
+            return;
+        }
+        
         let priceKeys = [];
         
         if (service !== 'window-cleaning') {
@@ -1215,11 +1241,11 @@
             grandTotal += serviceCalculations[i].price;
         }
         
-        // Get manual quote services
+        // Count manual quote services from serviceCalculations
         const manualQuoteServices = [];
-        for (const key in allServiceAnswers) {
-            if (allServiceAnswers[key].manualQuote) {
-                manualQuoteServices.push(allServiceAnswers[key].serviceLabel);
+        for (let i = 0; i < serviceCalculations.length; i++) {
+            if (serviceCalculations[i].manualQuote) {
+                manualQuoteServices.push(serviceCalculations[i].serviceLabel);
             }
         }
         
@@ -1228,19 +1254,16 @@
         for (let i = 0; i < serviceCalculations.length; i++) {
             const calc = serviceCalculations[i];
             fullSummary += '=== ' + calc.serviceLabel + ' ===\n';
-            for (let j = 0; j < calc.breakdown.length; j++) {
-                fullSummary += calc.breakdown[j].label + ': £' + calc.breakdown[j].price.toFixed(2) + '\n';
+            
+            // Handle manual quote services differently
+            if (calc.manualQuote) {
+                fullSummary += '(Quote to be provided)\n\n';
+            } else {
+                for (let j = 0; j < calc.breakdown.length; j++) {
+                    fullSummary += calc.breakdown[j].label + ': £' + calc.breakdown[j].price.toFixed(2) + '\n';
+                }
+                fullSummary += 'Subtotal: £' + calc.price.toFixed(2) + '\n\n';
             }
-            fullSummary += 'Subtotal: £' + calc.price.toFixed(2) + '\n\n';
-        }
-        
-        // Add manual quote services to summary
-        if (manualQuoteServices.length > 0) {
-            fullSummary += '=== Services Requiring Manual Quote ===\n';
-            manualQuoteServices.forEach(function(svc) {
-                fullSummary += svc + ': (Quote to be provided)\n';
-            });
-            fullSummary += '\n';
         }
         
         let html = '<form id="quote-contact-form">';
@@ -1259,14 +1282,14 @@
         // Price Display with Grand Total
         html += '<div style="background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border: 2px solid rgba(8, 145, 178, 0.2); border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px;">';
         
-        // Show individual service totals
-        if (serviceCalculations.length > 0) {
-            for (let i = 0; i < serviceCalculations.length; i++) {
+        // Show individual service totals (skip manual quote services)
+        for (let i = 0; i < serviceCalculations.length; i++) {
+            if (!serviceCalculations[i].manualQuote) {
                 html += '<div style="font-size: 1rem; color: var(--pgc-gray-600); margin-bottom: 5px;">' + serviceCalculations[i].serviceLabel + ': £' + serviceCalculations[i].price.toFixed(2) + '</div>';
             }
         }
         
-        // Show manual quote services
+        // Show manual quote services separately
         if (manualQuoteServices.length > 0) {
             manualQuoteServices.forEach(function(svc) {
                 html += '<div style="font-size: 1rem; color: var(--pgc-gray-500); margin-bottom: 5px;">' + svc + ': (Quote to be provided)</div>';
