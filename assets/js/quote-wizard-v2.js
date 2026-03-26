@@ -539,6 +539,11 @@
                 { value: 'driveway', label: 'Driveway', next: 'contact_form' },
                 { value: 'both', label: 'Patio and Driveway', next: 'contact_form' }
             ]
+        },
+        'upsell_services': {
+            question: 'Do you require any other services?',
+            type: 'upsell',
+            options: [] // Populated dynamically
         }
     };
     
@@ -566,7 +571,7 @@
             
             // Handle next step
             if (next === 'display_quote') {
-                calculateAndShowQuote();
+                renderStep('upsell_services');
             } else if (next === 'contact_form') {
                 showContactForm();
             } else if (next === 'dynamic_oven_next') {
@@ -691,12 +696,79 @@
                 answers[stepId + '_has_oven'] = true;
                 renderStep('oven_size');
             } else {
-                if (stepId === 'dom_addons') {
-                    calculateAndShowQuote();
-                } else if (stepId === 'eot_addons') {
-                    calculateAndShowQuote();
+                renderStep('upsell_services');
+            }
+        });
+        
+        // Store answers for each service separately
+        let allServiceAnswers = {};
+        let currentServiceKey = 'service_1';
+        
+        // Handle upsell service selection
+        $(document).on('click', '.quote-option-upsell', function() {
+            const value = $(this).data('value');
+            const next = $(this).data('next');
+            const label = $(this).find('.option-label').text();
+            
+            // Save current service answers
+            allServiceAnswers[currentServiceKey] = {
+                service: answers['service_selection'].value,
+                serviceLabel: answers['service_selection'].label,
+                answers: Object.assign({}, answers)
+            };
+            
+            // Find the next service number
+            let serviceNum = 2;
+            for (const key in allServiceAnswers) {
+                if (key.startsWith('service_')) {
+                    const num = parseInt(key.replace('service_', ''));
+                    if (num >= serviceNum) serviceNum = num + 1;
                 }
             }
+            currentServiceKey = 'service_' + serviceNum;
+            
+            // Reset answers for new service but keep track of all services
+            const newServiceAnswers = {
+                'service_selection': { value: value, label: label }
+            };
+            
+            // Copy additional service tracking
+            for (const key in answers) {
+                if (key.startsWith('additional_service_') || key === 'all_services') {
+                    newServiceAnswers[key] = answers[key];
+                }
+            }
+            
+            // Track all services
+            if (!newServiceAnswers['all_services']) {
+                newServiceAnswers['all_services'] = [];
+            }
+            newServiceAnswers['all_services'].push({
+                value: value,
+                label: label,
+                key: currentServiceKey
+            });
+            
+            // Clear and set new answers
+            Object.keys(answers).forEach(key => delete answers[key]);
+            Object.assign(answers, newServiceAnswers);
+            
+            stepHistory = [];
+            
+            // Start the new service flow
+            renderStep(next);
+        });
+        
+        // Handle upsell finish - show final quote
+        $(document).on('click', '#upsell-finish', function() {
+            stepHistory.push(currentStep);
+            // Save current service before calculating
+            allServiceAnswers[currentServiceKey] = {
+                service: answers['service_selection'].value,
+                serviceLabel: answers['service_selection'].label,
+                answers: Object.assign({}, answers)
+            };
+            calculateAndShowQuote();
         });
         
         // Carpet room count change - regenerate rows
@@ -824,6 +896,42 @@
             html += '<div style="text-align: center;">';
             html += '<button type="button" id="multi-continue" data-step="' + stepId + '" data-next="' + step.nextStep + '" class="pgc-btn pgc-btn-outline" style="padding: 16px 48px; font-size: 16px;">No Extras</button>';
             html += '</div>';
+        }
+        // Special handling for upsell step
+        else if (step.type === 'upsell') {
+            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px;">';
+            
+            // Get already selected services
+            const selectedServices = [];
+            for (const key in answers) {
+                if (key === 'service_selection' || key.startsWith('additional_service_')) {
+                    selectedServices.push(answers[key].value);
+                }
+            }
+            
+            // Show all services except already selected
+            const allServices = [
+                { value: 'window-cleaning', label: 'Window Cleaning', icon: '🪟', next: 'win_internal_external' },
+                { value: 'gutter-cleaning', label: 'Gutter Cleaning', icon: '🏠', next: 'gut_bedrooms' },
+                { value: 'domestic-cleaning', label: 'Domestic Cleaning', icon: '🏡', next: 'dom_type' },
+                { value: 'end-of-tenancy', label: 'Deep Clean/End of Tenancy', icon: '📦', next: 'eot_prop_type' },
+                { value: 'carpet-cleaning', label: 'Carpet Cleaning', icon: '🧹', next: 'carpet_prop_type' },
+                { value: 'oven-cleaning', label: 'Oven Cleaning', icon: '🔥', next: 'oven_size' },
+                { value: 'pressure-washing', label: 'Pressure Washing', icon: '💧', next: 'pw_location' }
+            ];
+            
+            allServices.forEach(function(svc) {
+                if (selectedServices.indexOf(svc.value) === -1) {
+                    html += '<div class="quote-option-upsell" data-value="' + svc.value + '" data-next="' + svc.next + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
+                    html += '<div style="font-size: 32px; margin-bottom: 8px;">' + svc.icon + '</div>';
+                    html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + svc.label + '</div>';
+                    html += '</div>';
+                }
+            });
+            html += '</div>';
+            html += '<div style="text-align: center; margin-top: 20px;">';
+            html += '<button type="button" id="upsell-finish" class="pgc-btn pgc-btn-primary" style="padding: 16px 48px; font-size: 16px;">No thanks, that\'s all for now</button>';
+            html += '</div>';
         } 
         else {
             // Options
@@ -945,16 +1053,51 @@
         }
     }
     
+    // Store multiple service calculations
+    let serviceCalculations = [];
+    
     function calculateAndShowQuote() {
-        // For window cleaning, we don't use priceKeys - server calculates based on frequency/bedrooms
-        // For other services, collect price keys
-        const service = answers['service_selection']?.value || '';
+        // Calculate all services stored in allServiceAnswers
+        serviceCalculations = [];
+        const serviceKeys = Object.keys(allServiceAnswers).sort();
+        
+        if (serviceKeys.length === 0) {
+            // No services stored yet, calculate current one
+            const service = answers['service_selection']?.value || '';
+            calculateServiceQuote(service, answers, function(result) {
+                serviceCalculations.push({
+                    service: service,
+                    serviceLabel: serviceInfo[service]?.label || service,
+                    price: result.total,
+                    breakdown: result.breakdown
+                });
+                showQuoteAndContactForm();
+            });
+            return;
+        }
+        
+        calculateNextService(serviceKeys, 0, function() {
+            showQuoteAndContactForm();
+        });
+    }
+    
+    function calculateNextService(serviceKeys, index, callback) {
+        if (index >= serviceKeys.length) {
+            callback();
+            return;
+        }
+        
+        const key = serviceKeys[index];
+        const serviceData = allServiceAnswers[key];
+        const service = serviceData.service;
+        const serviceAnswers = serviceData.answers;
+        
         let priceKeys = [];
         
         if (service !== 'window-cleaning') {
-            for (const key in answers) {
-                if (answers[key].priceKey) {
-                    priceKeys.push(answers[key].priceKey);
+            for (const ansKey in serviceAnswers) {
+                if (serviceAnswers[ansKey].priceKey) {
+                    priceKeys.push(serviceAnswers[ansKey].priceKey);
                 }
             }
         }
@@ -967,47 +1110,115 @@
                 nonce: pgc_ajax.nonce,
                 service: service,
                 price_keys: priceKeys,
-                answers: JSON.stringify(answers)
+                answers: JSON.stringify(serviceAnswers)
             },
             success: function(response) {
                 if (response.success) {
-                    calculatedPrice = response.data.total;
-                    priceBreakdown = response.data.breakdown;
-                    showQuoteAndContactForm();
+                    serviceCalculations.push({
+                        service: service,
+                        serviceLabel: serviceInfo[service]?.label || service,
+                        price: response.data.total,
+                        breakdown: response.data.breakdown
+                    });
                 }
+                calculateNextService(serviceKeys, index + 1, callback);
+            },
+            error: function() {
+                calculateNextService(serviceKeys, index + 1, callback);
             }
         });
     }
     
+    function calculateServiceQuote(service, serviceAnswers, callback) {
+        let priceKeys = [];
+        
+        if (service !== 'window-cleaning') {
+            for (const key in serviceAnswers) {
+                if (serviceAnswers[key].priceKey) {
+                    priceKeys.push(serviceAnswers[key].priceKey);
+                }
+            }
+        }
+        
+        $.ajax({
+            url: pgc_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'pgc_calculate_quote_v3',
+                nonce: pgc_ajax.nonce,
+                service: service,
+                price_keys: priceKeys,
+                answers: JSON.stringify(serviceAnswers)
+            },
+            success: function(response) {
+                if (response.success) {
+                    callback({
+                        total: response.data.total,
+                        breakdown: response.data.breakdown
+                    });
+                } else {
+                    callback({ total: 0, breakdown: [] });
+                }
+            },
+            error: function() {
+                callback({ total: 0, breakdown: [] });
+            }
+        });
+    }
+    
+    
     function showQuoteAndContactForm() {
         const container = $('#quote-wizard-container');
-        const quoteSummary = generateQuoteSummary();
+        
+        // Calculate grand total from all services
+        let grandTotal = 0;
+        for (let i = 0; i < serviceCalculations.length; i++) {
+            grandTotal += serviceCalculations[i].price;
+        }
+        
+        // Generate summary for all services
+        let fullSummary = '';
+        for (let i = 0; i < serviceCalculations.length; i++) {
+            const calc = serviceCalculations[i];
+            fullSummary += '=== ' + calc.serviceLabel + ' ===\n';
+            for (let j = 0; j < calc.breakdown.length; j++) {
+                fullSummary += calc.breakdown[j].label + ': £' + calc.breakdown[j].price.toFixed(2) + '\n';
+            }
+            fullSummary += 'Subtotal: £' + calc.price.toFixed(2) + '\n\n';
+        }
         
         let html = '<form id="quote-contact-form">';
         
         // Hidden field with full quote data for admin
         html += '<input type="hidden" name="quote_data" value="' + encodeURIComponent(JSON.stringify({
-            service: answers['service_selection'].value,
-            answers: answers,
-            price: calculatedPrice,
-            breakdown: priceBreakdown,
-            summary: quoteSummary
+            services: serviceCalculations,
+            grandTotal: grandTotal,
+            summary: fullSummary
         })) + '">';
         
         // Page Title
         html += '<h2 style="font-size: 1.75rem; font-weight: 800; color: var(--pgc-gray-900); margin-bottom: 10px; text-align: center;">Complete Your Booking</h2>';
         
-        // Price Display (Total only - no breakdown)
+        // Price Display with Grand Total
         html += '<div style="background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border: 2px solid rgba(8, 145, 178, 0.2); border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px;">';
-        html += '<div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--pgc-primary), var(--pgc-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">£' + calculatedPrice.toFixed(2) + '</div>';
-        html += '<div style="color: var(--pgc-gray-500); margin-top: 5px;">Estimated Total*</div>';
+        
+        // Show individual service totals if multiple services
+        if (serviceCalculations.length > 1) {
+            for (let i = 0; i < serviceCalculations.length; i++) {
+                html += '<div style="font-size: 1rem; color: var(--pgc-gray-600); margin-bottom: 5px;">' + serviceCalculations[i].serviceLabel + ': £' + serviceCalculations[i].price.toFixed(2) + '</div>';
+            }
+            html += '<div style="border-top: 1px solid rgba(8, 145, 178, 0.2); margin: 15px 0;"></div>';
+        }
+        
+        html += '<div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--pgc-primary), var(--pgc-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">£' + grandTotal.toFixed(2) + '</div>';
+        html += '<div style="color: var(--pgc-gray-500); margin-top: 5px;">Grand Total*</div>';
         html += '<div style="color: var(--pgc-gray-400); font-size: 12px; margin-top: 8px;">*Prices are estimates and may vary based on actual conditions</div>';
         html += '</div>';
         
         // Human-readable quote summary
         html += '<div style="background: var(--pgc-gray-50); border-radius: 12px; padding: 20px; margin-bottom: 30px;">';
         html += '<h3 style="font-size: 1rem; font-weight: 600; color: var(--pgc-gray-700); margin-bottom: 15px;">Quote Summary</h3>';
-        html += '<pre style="margin: 0; font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: var(--pgc-gray-600); white-space: pre-wrap;">' + quoteSummary + '</pre>';
+        html += '<pre style="margin: 0; font-family: inherit; font-size: 0.95rem; line-height: 1.6; color: var(--pgc-gray-600); white-space: pre-wrap;">' + fullSummary + '</pre>';
         html += '</div>';
         
         // Contact Form Fields
