@@ -1569,7 +1569,6 @@ function pgc_ajax_calculate_quote_v3() {
         $smallPrice = pgc_get_price('ow_carpet_small');
         $mediumPrice = pgc_get_price('ow_carpet_medium');
         $largePrice = pgc_get_price('ow_carpet_large');
-        $stairsPrice = pgc_get_price('ow_carpet_stairs_landing');
         
         $total = 0;
         $breakdown = [];
@@ -1590,11 +1589,21 @@ function pgc_ajax_calculate_quote_v3() {
             $breakdown[] = ['label' => 'Large rooms (' . $large . ')', 'price' => $largeTotal];
         }
         
-        // Stairs/landing
-        $stairs = is_array($answers['carpet_stairs'] ?? null) ? ($answers['carpet_stairs']['value'] ?? 'no') : ($answers['carpet_stairs'] ?? 'no');
-        if ($stairs === 'yes') {
+        // Stairs/landing options
+        $stairsOption = is_array($answers['carpet_stairs'] ?? null) ? ($answers['carpet_stairs']['value'] ?? 'neither') : ($answers['carpet_stairs'] ?? 'neither');
+        
+        if ($stairsOption === 'stairs_only') {
+            $stairsPrice = pgc_get_price('ow_carpet_stairs');
             $total += $stairsPrice;
-            $breakdown[] = ['label' => 'Stairs & landing', 'price' => $stairsPrice];
+            $breakdown[] = ['label' => 'Stairs only', 'price' => $stairsPrice];
+        } elseif ($stairsOption === 'landing_only') {
+            $landingPrice = pgc_get_price('ow_carpet_landing');
+            $total += $landingPrice;
+            $breakdown[] = ['label' => 'Landing only', 'price' => $landingPrice];
+        } elseif ($stairsOption === 'stairs_and_landing') {
+            $combinedPrice = pgc_get_price('ow_carpet_stairs_landing');
+            $total += $combinedPrice;
+            $breakdown[] = ['label' => 'Stairs & landing', 'price' => $combinedPrice];
         }
     }
     

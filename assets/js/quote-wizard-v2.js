@@ -70,7 +70,7 @@
                 'eot_fridge_check': 'Fridge cleaning',
                 'carpet_prop_type': 'Property type',
                 'carpet_rooms': 'Room sizes',
-                'carpet_stairs': 'Stairs/landing',
+                'carpet_stairs': 'Stairs/Landing',
                 'carpet_parking': 'Parking',
                 'oven_size': 'Oven size',
                 'oven_extras': 'Additional appliances',
@@ -472,12 +472,13 @@
             next: 'carpet_stairs'
         },
         'carpet_stairs': {
-            question: 'Include stairs and landing?',
+            question: 'Do you require stairs or landing cleaning?',
             type: 'single',
-            priceField: true,
             options: [
-                { value: 'yes', label: 'Yes', priceKey: 'ow_carpet_stairs_landing', next: 'carpet_parking' },
-                { value: 'no', label: 'No', next: 'carpet_parking' }
+                { value: 'stairs_only', label: 'Stairs Only', priceKey: 'ow_carpet_stairs', next: 'carpet_parking' },
+                { value: 'landing_only', label: 'Landing Only', priceKey: 'ow_carpet_landing', next: 'carpet_parking' },
+                { value: 'stairs_and_landing', label: 'Stairs & Landing', priceKey: 'ow_carpet_stairs_landing', next: 'carpet_parking' },
+                { value: 'neither', label: 'Neither', next: 'carpet_parking' }
             ]
         },
         'carpet_parking': {
