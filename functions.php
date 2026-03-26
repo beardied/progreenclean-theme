@@ -850,10 +850,12 @@ function pgc_ajax_submit_quote_v2() {
     $admin_message .= pgc_get_email_footer();
     
     // Handle image uploads
-    $attachments = [];
+    $image_links = [];
+    $quote_upload_dir = '';
     if (!empty($_FILES['quote_images'])) {
         $upload_dir = wp_upload_dir();
         $quote_upload_dir = $upload_dir['basedir'] . '/quote-uploads/' . $quote_id;
+        $quote_upload_url = $upload_dir['baseurl'] . '/quote-uploads/' . $quote_id;
         
         if (!file_exists($quote_upload_dir)) {
             wp_mkdir_p($quote_upload_dir);
@@ -869,23 +871,30 @@ function pgc_ajax_submit_quote_v2() {
                 // Validate file type
                 $file_type = wp_check_filetype($name, ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp']);
                 if ($file_type['type'] && move_uploaded_file($tmp_name, $file_path)) {
-                    $attachments[] = $file_path;
+                    $image_links[] = $quote_upload_url . '/' . $name;
                 }
             }
         }
-        
-        // Add image reference to admin email
-        if (!empty($attachments)) {
-            $admin_message = str_replace('</body>', '<p style="color: #0891b2; margin-top: 24px;"><strong>Images Attached:</strong> ' . count($attachments) . ' image(s) uploaded with this quote.</p></body>', $admin_message);
-        }
     }
     
-    // Send admin email with attachments
-    if (!empty($attachments)) {
-        wp_mail($admin_email, $admin_subject, $admin_message, $headers, $attachments);
-    } else {
-        wp_mail($admin_email, $admin_subject, $admin_message, $headers);
+    // Add image links section to admin email
+    if (!empty($image_links)) {
+        $images_html = '<div style="margin-top: 24px; padding: 16px; background: #f0f9ff; border-radius: 8px;">';
+        $images_html .= '<h3 style="color: #0891b2; margin-top: 0;">📷 Uploaded Images</h3>';
+        $images_html .= '<p style="color: #475569; margin-bottom: 12px;">' . count($image_links) . ' image(s) uploaded. Click to view:</p>';
+        $images_html .= '<ul style="margin: 0; padding-left: 20px;">';
+        foreach ($image_links as $index => $link) {
+            $images_html .= '<li style="margin-bottom: 8px;"><a href="' . esc_url($link) . '" style="color: #0891b2; text-decoration: underline;" target="_blank">View Image ' . ($index + 1) . '</a></li>';
+        }
+        $images_html .= '</ul>';
+        $images_html .= '<p style="color: #64748b; font-size: 12px; margin-top: 12px; margin-bottom: 0;">Images stored at: ' . esc_html($quote_upload_dir) . '</p>';
+        $images_html .= '</div>';
+        
+        $admin_message = str_replace('</body>', $images_html . '</body>', $admin_message);
     }
+    
+    // Send admin email (no attachments - images are on server)
+    wp_mail($admin_email, $admin_subject, $admin_message, $headers);
     
     wp_send_json_success(['quote_id' => $quote_id]);
 }

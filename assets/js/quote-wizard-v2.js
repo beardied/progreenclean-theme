@@ -536,10 +536,10 @@
             type: 'single',
             priceField: true,
             options: [
-                { value: 'single', label: 'Single Oven', priceKey: 'ow_price_oven_single', next: 'dynamic_oven_next' },
-                { value: 'double', label: 'Double Oven', priceKey: 'ow_price_oven_double', next: 'dynamic_oven_next' },
-                { value: 'range', label: 'Range / Rangemaster', priceKey: 'ow_price_oven_range', next: 'dynamic_oven_next' },
-                { value: 'aga', label: 'AGA Oven', priceKey: 'ow_price_oven_aga', next: 'dynamic_oven_next' }
+                { value: 'single', label: 'Single Oven', priceKey: 'ow_price_oven_single', next: 'display_quote' },
+                { value: 'double', label: 'Double Oven', priceKey: 'ow_price_oven_double', next: 'display_quote' },
+                { value: 'range', label: 'Range / Rangemaster', priceKey: 'ow_price_oven_range', next: 'display_quote' },
+                { value: 'aga', label: 'AGA Oven', priceKey: 'ow_price_oven_aga', next: 'display_quote' }
             ]
         },
         // Fridge Cleaning Flow - Single price, auto-selected
@@ -660,9 +660,6 @@
                 answers = {};
                 stepHistory = [];
                 renderStep('upsell_services');
-            } else if (next === 'dynamic_oven_next') {
-                // Go straight to upsell - no more oven extras question
-                renderStep('display_quote');
             } else {
                 renderStep(next);
             }
