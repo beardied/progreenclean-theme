@@ -1390,7 +1390,7 @@
             
             // Handle manual quote services differently
             if (calc.manualQuote) {
-                fullSummary += '(We will be in contact regarding this service quotation)\n\n';
+                fullSummary += '(Please upload images to assist us with your quote and we will be in contact shortly)\n\n';
             } else {
                 for (let j = 0; j < calc.breakdown.length; j++) {
                     fullSummary += calc.breakdown[j].label + ': £' + calc.breakdown[j].price.toFixed(2) + '\n';
@@ -1436,7 +1436,7 @@
         // Show manual quote services separately
         if (manualQuoteServices.length > 0) {
             manualQuoteServices.forEach(function(svc) {
-                html += '<div style="font-size: 1rem; color: var(--pgc-gray-500); margin-bottom: 5px;">' + svc + ': (We will be in contact regarding this service quotation)</div>';
+                html += '<div style="font-size: 1rem; color: var(--pgc-gray-500); margin-bottom: 5px;">' + svc + ': (Please upload images to assist us with your quote and we will be in contact shortly)</div>';
             });
         }
         

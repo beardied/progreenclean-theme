@@ -1397,8 +1397,17 @@ function pgc_ajax_calculate_quote_v3() {
         $bedrooms = $answers['win_bedrooms']['value'] ?? '2';
         $internal_external = $answers['win_internal_external']['value'] ?? 'external';
         
+        // Map frequency values to price key suffixes
+        $freq_map = [
+            'one-off' => 'oneoff',
+            '4-weekly' => '4week',
+            '8-weekly' => '8week',
+            '12-weekly' => '12week'
+        ];
+        $freq_suffix = $freq_map[$frequency] ?? 'oneoff';
+        
         // Build base price key based on bedrooms and frequency
-        $base_key = 'ow_win_' . $bedrooms . 'bed_' . str_replace('-', '', $frequency);
+        $base_key = 'ow_win_' . $bedrooms . 'bed_' . $freq_suffix;
         $base_price = pgc_get_price($base_key);
         
         $external_price = 0;
