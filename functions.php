@@ -1549,6 +1549,55 @@ function pgc_ajax_calculate_quote_v3() {
         $breakdown[] = ['label' => 'Domestic Cleaning (' . $hours . ' hours @ £' . $hourly_rate . '/hr)', 'price' => $domestic_total];
     }
     
+    // Carpet Cleaning - Calculate based on room sizes
+    if ($service === 'carpet-cleaning') {
+        $small = 0;
+        $medium = 0;
+        $large = 0;
+        
+        // Count rooms from carpet_room_1, carpet_room_2, etc.
+        foreach ($answers as $key => $value) {
+            if (strpos($key, 'carpet_room_') === 0) {
+                $roomSize = is_array($value) ? ($value['value'] ?? '') : $value;
+                if ($roomSize === 'small') $small++;
+                elseif ($roomSize === 'medium') $medium++;
+                elseif ($roomSize === 'large') $large++;
+            }
+        }
+        
+        // Get prices
+        $smallPrice = pgc_get_price('ow_carpet_small');
+        $mediumPrice = pgc_get_price('ow_carpet_medium');
+        $largePrice = pgc_get_price('ow_carpet_large');
+        $stairsPrice = pgc_get_price('ow_carpet_stairs_landing');
+        
+        $total = 0;
+        $breakdown = [];
+        
+        if ($small > 0) {
+            $smallTotal = $small * $smallPrice;
+            $total += $smallTotal;
+            $breakdown[] = ['label' => 'Small rooms (' . $small . ')', 'price' => $smallTotal];
+        }
+        if ($medium > 0) {
+            $mediumTotal = $medium * $mediumPrice;
+            $total += $mediumTotal;
+            $breakdown[] = ['label' => 'Medium rooms (' . $medium . ')', 'price' => $mediumTotal];
+        }
+        if ($large > 0) {
+            $largeTotal = $large * $largePrice;
+            $total += $largeTotal;
+            $breakdown[] = ['label' => 'Large rooms (' . $large . ')', 'price' => $largeTotal];
+        }
+        
+        // Stairs/landing
+        $stairs = is_array($answers['carpet_stairs'] ?? null) ? ($answers['carpet_stairs']['value'] ?? 'no') : ($answers['carpet_stairs'] ?? 'no');
+        if ($stairs === 'yes') {
+            $total += $stairsPrice;
+            $breakdown[] = ['label' => 'Stairs & landing', 'price' => $stairsPrice];
+        }
+    }
+    
     wp_send_json_success([
         'total' => $total,
         'breakdown' => $breakdown,
