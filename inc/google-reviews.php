@@ -57,7 +57,7 @@ add_action('admin_menu', function() {
         'pgc-google-reviews',
         'pgc_google_reviews_page_html'
     );
-});
+}, 25);
 
 /**
  * Register settings
