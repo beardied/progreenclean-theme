@@ -33,12 +33,12 @@ get_header();
                 
                 <div style="margin-bottom: 24px;">
                     <div style="font-weight: 600; color: var(--pgc-gray-700); margin-bottom: 6px;">Email</div>
-                    <a href="mailto:info@progreenclean.co.uk" style="color: var(--pgc-primary); font-size: 1.1rem; text-decoration: none;">info@progreenclean.co.uk</a>
+                    <a href="mailto:<?php echo esc_attr(get_option('pgc_display_email', 'info@progreenclean.co.uk')); ?>" style="color: var(--pgc-primary); font-size: 1.1rem; text-decoration: none;"><?php echo esc_html(get_option('pgc_display_email', 'info@progreenclean.co.uk')); ?></a>
                 </div>
                 
                 <div>
                     <div style="font-weight: 600; color: var(--pgc-gray-700); margin-bottom: 6px;">Business Hours</div>
-                    <div style="color: var(--pgc-gray-600);">Mon - Fri: 8am - 6pm<br>Sat: 9am - 2pm<br>Sun: Closed</div>
+                    <div style="color: var(--pgc-gray-600);"><?php echo nl2br(esc_html(get_option('pgc_opening_hours', "Mon - Fri: 8am - 6pm\nSat: 9am - 2pm\nSun: Closed"))); ?></div>
                 </div>
             </div>
             

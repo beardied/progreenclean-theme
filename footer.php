@@ -49,11 +49,13 @@
             <div>
                 <h4 class="pgc-footer-title">Contact</h4>
                 <nav class="pgc-footer-links">
-                    <a href="tel:<?php echo esc_attr(get_option('pgc_phone', '08001234567')); ?>">
+                    <a href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', get_option('pgc_phone', '0800 123 4567'))); ?>">
                         <?php echo esc_html(get_option('pgc_phone', '0800 123 4567')); ?>
                     </a>
-                    <a href="mailto:info@progreenclean.co.uk">info@progreenclean.co.uk</a>
-                    <span>Mon-Fri: 8am - 6pm</span>
+                    <a href="mailto:<?php echo esc_attr(get_option('pgc_display_email', 'info@progreenclean.co.uk')); ?>">
+                        <?php echo esc_html(get_option('pgc_display_email', 'info@progreenclean.co.uk')); ?>
+                    </a>
+                    <span><?php echo nl2br(esc_html(get_option('pgc_opening_hours', 'Mon-Fri: 8am - 6pm'))); ?></span>
                 </nav>
             </div>
         </div>
