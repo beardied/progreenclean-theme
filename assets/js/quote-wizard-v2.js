@@ -634,6 +634,11 @@
                         serviceLabel: answers['service_selection'].label,
                         answers: Object.assign({}, answers)
                     };
+                    // Also add to includedServices so other services know it's already selected
+                    const serviceValue = answers['service_selection'].value;
+                    if (includedServices.indexOf(serviceValue) === -1) {
+                        includedServices.push(serviceValue);
+                    }
                     // Increment service key for next service
                     const currentNum = parseInt(currentServiceKey.replace('service_', ''));
                     currentServiceKey = 'service_' + (currentNum + 1);
@@ -652,6 +657,11 @@
                         answers: Object.assign({}, answers),
                         manualQuote: true
                     };
+                    // Also add to includedServices so other services know it's already selected
+                    const serviceValue = answers['service_selection'].value;
+                    if (includedServices.indexOf(serviceValue) === -1) {
+                        includedServices.push(serviceValue);
+                    }
                     // Increment service key for next service
                     const currentNum = parseInt(currentServiceKey.replace('service_', ''));
                     currentServiceKey = 'service_' + (currentNum + 1);
