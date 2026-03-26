@@ -894,7 +894,8 @@
         // Price Display (Total only - no breakdown)
         html += '<div style="background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border: 2px solid rgba(8, 145, 178, 0.2); border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px;">';
         html += '<div style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--pgc-primary), var(--pgc-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">£' + calculatedPrice.toFixed(2) + '</div>';
-        html += '<div style="color: var(--pgc-gray-500); margin-top: 5px;">Estimated Total</div>';
+        html += '<div style="color: var(--pgc-gray-500); margin-top: 5px;">Estimated Total*</div>';
+        html += '<div style="color: var(--pgc-gray-400); font-size: 12px; margin-top: 8px;">*Prices are estimates and may vary based on actual conditions</div>';
         html += '</div>';
         
         // Human-readable quote summary
