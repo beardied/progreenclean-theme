@@ -685,6 +685,14 @@ add_shortcode('pgc_homepage_reviews', function() {
     }
     $output .= '</div>';
     
+    // View all reviews link
+    $reviews_page_url = get_permalink(get_page_by_path('reviews'));
+    if ($reviews_page_url) {
+        $output .= '<div style="text-align: center; margin-top: 40px;">';
+        $output .= '<a href="' . esc_url($reviews_page_url) . '" class="pgc-btn pgc-btn--primary" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">View All Reviews</a>';
+        $output .= '</div>';
+    }
+    
     return $output;
 });
 
