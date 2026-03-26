@@ -161,8 +161,8 @@
                 { value: 'commercial-cleaning', label: 'Commercial Cleaning Exterior and Interior', next: 'contact_form' },
                 { value: 'carpet-cleaning', label: 'Carpet Cleaning', next: 'carpet_prop_type' },
                 { value: 'oven-cleaning', label: 'Oven Cleaning', next: 'oven_size' },
-                { value: 'fridge-cleaning', label: 'Fridge Cleaning', next: 'fridge_cleaning_qty' },
-                { value: 'microwave-cleaning', label: 'Microwave Cleaning', next: 'microwave_cleaning_qty' },
+                { value: 'fridge-cleaning', label: 'Fridge Cleaning', next: 'fridge_cleaning_single' },
+                { value: 'microwave-cleaning', label: 'Microwave Cleaning', next: 'microwave_cleaning_single' },
                 { value: 'pressure-washing', label: 'Pressure Washing', next: 'pw_location' },
                 { value: 'solar-panel', label: 'Solar Panel Cleaning', next: 'contact_form' },
                 { value: 'graffiti-removal', label: 'Graffiti Removal', next: 'contact_form' }
@@ -553,27 +553,25 @@
             ]
         },
         
-        // Fridge Cleaning Flow
-        'fridge_cleaning_qty': {
-            question: 'How many fridges to clean?',
+        // Fridge Cleaning Flow - Single price, auto-selected
+        'fridge_cleaning_single': {
+            question: 'Fridge Cleaning',
+            subtitle: 'Standard single fridge cleaning',
             type: 'single',
             priceField: true,
             options: [
-                { value: '1', label: '1 Fridge', priceKey: 'ow_price_fridge', next: 'display_quote' },
-                { value: '2', label: '2 Fridges', priceKey: 'ow_price_fridge', next: 'display_quote' },
-                { value: '3', label: '3+ Fridges', priceKey: 'ow_price_fridge', next: 'display_quote' }
+                { value: 'standard', label: 'Standard Fridge Clean (£40)', priceKey: 'ow_price_fridge', next: 'display_quote' }
             ]
         },
         
-        // Microwave Cleaning Flow
-        'microwave_cleaning_qty': {
-            question: 'How many microwaves to clean?',
+        // Microwave Cleaning Flow - Single price, auto-selected
+        'microwave_cleaning_single': {
+            question: 'Microwave Cleaning',
+            subtitle: 'Standard single microwave cleaning',
             type: 'single',
             priceField: true,
             options: [
-                { value: '1', label: '1 Microwave', priceKey: 'ow_price_microwave', next: 'display_quote' },
-                { value: '2', label: '2 Microwaves', priceKey: 'ow_price_microwave', next: 'display_quote' },
-                { value: '3', label: '3+ Microwaves', priceKey: 'ow_price_microwave', next: 'display_quote' }
+                { value: 'standard', label: 'Standard Microwave Clean (£25)', priceKey: 'ow_price_microwave', next: 'display_quote' }
             ]
         },
         
@@ -605,6 +603,11 @@
             const value = $(this).data('value');
             const next = $(this).data('next');
             const priceKey = $(this).data('price-key');
+            
+            // Skip if this is the upsell step (handled by separate handler)
+            if (step === 'upsell_services') {
+                return;
+            }
             
             // Save answer
             answers[step] = {
@@ -646,27 +649,32 @@
             // Handle next step
             if (next === 'display_quote') {
                 // Save current service before showing upsell
-                allServiceAnswers[currentServiceKey] = {
-                    service: answers['service_selection'].value,
-                    serviceLabel: answers['service_selection'].label,
-                    answers: Object.assign({}, answers)
-                };
-                // Increment service key for next service
-                const currentNum = parseInt(currentServiceKey.replace('service_', ''));
-                currentServiceKey = 'service_' + (currentNum + 1);
+                if (answers['service_selection']) {
+                    allServiceAnswers[currentServiceKey] = {
+                        service: answers['service_selection'].value,
+                        serviceLabel: answers['service_selection'].label,
+                        answers: Object.assign({}, answers)
+                    };
+                    // Increment service key for next service
+                    const currentNum = parseInt(currentServiceKey.replace('service_', ''));
+                    currentServiceKey = 'service_' + (currentNum + 1);
+                }
                 stepHistory = [];
                 renderStep('upsell_services');
             } else if (next === 'contact_form') {
                 // Service requires manual quote - save and go to upsell
-                allServiceAnswers[currentServiceKey] = {
-                    service: answers['service_selection'].value,
-                    serviceLabel: answers['service_selection'].label,
-                    answers: Object.assign({}, answers),
-                    manualQuote: true
-                };
-                // Increment service key for next service
-                const currentNum = parseInt(currentServiceKey.replace('service_', ''));
-                currentServiceKey = 'service_' + (currentNum + 1);
+                // Check if we have a current service being worked on
+                if (answers['service_selection']) {
+                    allServiceAnswers[currentServiceKey] = {
+                        service: answers['service_selection'].value,
+                        serviceLabel: answers['service_selection'].label,
+                        answers: Object.assign({}, answers),
+                        manualQuote: true
+                    };
+                    // Increment service key for next service
+                    const currentNum = parseInt(currentServiceKey.replace('service_', ''));
+                    currentServiceKey = 'service_' + (currentNum + 1);
+                }
                 // Clear answers for next service selection
                 answers = {};
                 stepHistory = [];
