@@ -101,6 +101,10 @@
             if (stepId === 'carpet_rooms') {
                 continue;
             }
+            // Skip internal flags
+            if (stepId.endsWith('_has_oven')) {
+                continue;
+            }
             if (answer.value === 'no' && !stepId.includes('check')) {
                 continue; // Skip "no" answers unless they're specific questions
             }
