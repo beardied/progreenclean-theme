@@ -1534,6 +1534,18 @@ function pgc_ajax_calculate_quote_v3() {
         }
     }
     
+    // End of Tenancy - Multi-select extras
+    if ($service === 'end-of-tenancy' && isset($answers['eot_addons']) && isset($answers['eot_addons']['multi'])) {
+        foreach ($answers['eot_addons']['multi'] as $addon) {
+            if ($addon['value'] === 'oven') continue; // Oven handled separately
+            $addonPrice = pgc_get_price($addon['priceKey']);
+            if ($addonPrice > 0) {
+                $total += $addonPrice;
+                $breakdown[] = ['label' => ucfirst($addon['value']), 'price' => $addonPrice];
+            }
+        }
+    }
+    
     // Hourly rate calculations
     if ($service === 'domestic-cleaning' && isset($answers['dom_hours'])) {
         $hours = intval($answers['dom_hours']['value'] ?? 2);
@@ -1556,6 +1568,18 @@ function pgc_ajax_calculate_quote_v3() {
                 $windowTotal = $windowQty * $windowPrice;
                 $total += $windowTotal;
                 $breakdown[] = ['label' => 'Internal windows (' . $windowQty . ')', 'price' => $windowTotal];
+            }
+        }
+        
+        // Multi-select extras calculation
+        if (isset($answers['dom_addons']) && isset($answers['dom_addons']['multi'])) {
+            foreach ($answers['dom_addons']['multi'] as $addon) {
+                if ($addon['value'] === 'oven') continue; // Oven handled separately
+                $addonPrice = pgc_get_price($addon['priceKey']);
+                if ($addonPrice > 0) {
+                    $total += $addonPrice;
+                    $breakdown[] = ['label' => ucfirst($addon['value']), 'price' => $addonPrice];
+                }
             }
         }
     }

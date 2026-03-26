@@ -396,14 +396,14 @@
         },
         'dom_addons': {
             question: 'Extra services?',
-            type: 'single',
-            priceField: true,
+            type: 'multi',
             options: [
-                { value: 'fridge', label: 'Inside Fridge', priceKey: 'ow_price_fridge', next: 'display_quote' },
-                { value: 'microwave', label: 'Inside Microwave', priceKey: 'ow_price_microwave', next: 'display_quote' },
-                { value: 'bedsheets', label: 'Bed Sheet Changing', priceKey: 'ow_price_bedsheets', next: 'display_quote' },
-                { value: 'none', label: 'No Extras', next: 'display_quote' }
-            ]
+                { value: 'fridge', label: 'Inside Fridge', priceKey: 'ow_price_fridge' },
+                { value: 'microwave', label: 'Inside Microwave', priceKey: 'ow_price_microwave' },
+                { value: 'bedsheets', label: 'Bed Sheet Changing', priceKey: 'ow_price_bedsheets' },
+                { value: 'oven', label: 'Oven Cleaning', priceKey: 'oven_followup' }
+            ],
+            nextStep: 'dom_addons_next'
         },
         
         // End of Tenancy Flow
@@ -451,29 +451,22 @@
             type: 'single',
             priceField: true,
             options: [
-                { value: '1', label: '1', priceKey: 'ow_carpet_unit', next: 'eot_oven_check' },
-                { value: '2', label: '2', priceKey: 'ow_carpet_unit', next: 'eot_oven_check' },
-                { value: '3', label: '3', priceKey: 'ow_carpet_unit', next: 'eot_oven_check' },
-                { value: '4', label: '4', priceKey: 'ow_carpet_unit', next: 'eot_oven_check' },
-                { value: '5+', label: '5+', priceKey: 'ow_carpet_unit', next: 'eot_oven_check' }
+                { value: '1', label: '1', priceKey: 'ow_carpet_unit', next: 'eot_addons' },
+                { value: '2', label: '2', priceKey: 'ow_carpet_unit', next: 'eot_addons' },
+                { value: '3', label: '3', priceKey: 'ow_carpet_unit', next: 'eot_addons' },
+                { value: '4', label: '4', priceKey: 'ow_carpet_unit', next: 'eot_addons' },
+                { value: '5+', label: '5+', priceKey: 'ow_carpet_unit', next: 'eot_addons' }
             ]
         },
-        'eot_oven_check': {
-            question: 'Do you require oven cleaning?',
-            type: 'single',
+        'eot_addons': {
+            question: 'Extra services?',
+            type: 'multi',
             options: [
-                { value: 'yes', label: 'Yes', next: 'oven_size' },
-                { value: 'no', label: 'No', next: 'eot_fridge_check' }
-            ]
-        },
-        'eot_fridge_check': {
-            question: 'Do you require fridge cleaning?',
-            type: 'single',
-            priceField: true,
-            options: [
-                { value: 'yes', label: 'Yes', priceKey: 'ow_price_fridge', next: 'display_quote' },
-                { value: 'no', label: 'No', next: 'display_quote' }
-            ]
+                { value: 'fridge', label: 'Inside Fridge', priceKey: 'ow_price_fridge' },
+                { value: 'microwave', label: 'Inside Microwave', priceKey: 'ow_price_microwave' },
+                { value: 'oven', label: 'Oven Cleaning', priceKey: 'oven_followup' }
+            ],
+            nextStep: 'eot_addons_next'
         },
         
         // Carpet Cleaning Flow
@@ -516,10 +509,10 @@
             type: 'single',
             priceField: true,
             options: [
-                { value: 'single', label: 'Single Oven', priceKey: 'ow_price_oven_single', next: 'oven_extras' },
-                { value: 'double', label: 'Double Oven', priceKey: 'ow_price_oven_double', next: 'oven_extras' },
-                { value: 'range', label: 'Range / Rangemaster', priceKey: 'ow_price_oven_range', next: 'oven_extras' },
-                { value: 'aga', label: 'AGA Oven', priceKey: 'ow_price_oven_aga', next: 'oven_extras' }
+                { value: 'single', label: 'Single Oven', priceKey: 'ow_price_oven_single', next: 'dynamic_oven_next' },
+                { value: 'double', label: 'Double Oven', priceKey: 'ow_price_oven_double', next: 'dynamic_oven_next' },
+                { value: 'range', label: 'Range / Rangemaster', priceKey: 'ow_price_oven_range', next: 'dynamic_oven_next' },
+                { value: 'aga', label: 'AGA Oven', priceKey: 'ow_price_oven_aga', next: 'dynamic_oven_next' }
             ]
         },
         'oven_extras': {
@@ -572,6 +565,13 @@
                 calculateAndShowQuote();
             } else if (next === 'contact_form') {
                 showContactForm();
+            } else if (next === 'dynamic_oven_next') {
+                // Check if we came from multi-select addons
+                if (answers['dom_addons_has_oven'] || answers['eot_addons_has_oven']) {
+                    calculateAndShowQuote();
+                } else {
+                    renderStep('oven_extras');
+                }
             } else {
                 renderStep(next);
             }
@@ -623,6 +623,76 @@
             
             stepHistory.push(currentStep);
             renderStep('dom_hours');
+        });
+        
+        // Handle multi-select options
+        $(document).on('click', '.quote-option-multi', function() {
+            const $this = $(this);
+            const isSelected = $this.attr('data-selected') === 'true';
+            
+            if (isSelected) {
+                $this.attr('data-selected', 'false');
+                $this.css({
+                    'background': 'var(--pgc-gray-50)',
+                    'border-color': 'transparent'
+                });
+            } else {
+                $this.attr('data-selected', 'true');
+                $this.css({
+                    'background': 'linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                    'border-color': 'var(--pgc-primary)'
+                });
+            }
+            
+            // Update button text if any selected
+            const stepId = $this.data('step');
+            const hasSelection = $('.quote-option-multi[data-step="' + stepId + '"][data-selected="true"]').length > 0;
+            const $btn = $('#multi-continue[data-step="' + stepId + '"]');
+            if (hasSelection) {
+                $btn.text('Next →').removeClass('pgc-btn-outline').addClass('pgc-btn-primary');
+            } else {
+                $btn.text('No Extras').removeClass('pgc-btn-primary').addClass('pgc-btn-outline');
+            }
+        });
+        
+        // Handle multi-select continue
+        $(document).on('click', '#multi-continue', function() {
+            const stepId = $(this).data('step');
+            const nextLogic = $(this).data('next');
+            const step = questionFlow[stepId];
+            
+            const selected = [];
+            const selectedLabels = [];
+            let hasOven = false;
+            
+            $('.quote-option-multi[data-step="' + stepId + '"][data-selected="true"]').each(function() {
+                const value = $(this).data('value');
+                const priceKey = $(this).data('price-key');
+                const label = $(this).find('.option-label').text();
+                selected.push({ value: value, priceKey: priceKey });
+                selectedLabels.push(label);
+                if (value === 'oven') hasOven = true;
+            });
+            
+            answers[stepId] = {
+                value: selected.length > 0 ? selected.map(s => s.value).join(',') : 'none',
+                label: selectedLabels.length > 0 ? selectedLabels.join(', ') : 'No extras',
+                multi: selected
+            };
+            
+            stepHistory.push(currentStep);
+            
+            // Determine next step
+            if (hasOven) {
+                answers[stepId + '_has_oven'] = true;
+                renderStep('oven_size');
+            } else {
+                if (stepId === 'dom_addons') {
+                    calculateAndShowQuote();
+                } else if (stepId === 'eot_addons') {
+                    calculateAndShowQuote();
+                }
+            }
         });
         
         // Carpet room count change - regenerate rows
@@ -737,6 +807,19 @@
         // Special handling for carpet room selector
         else if (step.type === 'carpet_room_selector') {
             html += renderCarpetRoomSelector(stepId, step);
+        }
+        // Special handling for multi-select
+        else if (step.type === 'multi') {
+            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px;">';
+            step.options.forEach(function(opt) {
+                html += '<div class="quote-option-multi" data-step="' + stepId + '" data-value="' + opt.value + '" data-price-key="' + (opt.priceKey || '') + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
+                html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + opt.label + '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+            html += '<div style="text-align: center;">';
+            html += '<button type="button" id="multi-continue" data-step="' + stepId + '" data-next="' + step.nextStep + '" class="pgc-btn pgc-btn-outline" style="padding: 16px 48px; font-size: 16px;">No Extras</button>';
+            html += '</div>';
         } 
         else {
             // Options
