@@ -85,7 +85,7 @@ $location_name = str_replace('Cleaning Services in ', '', get_the_title());
                 <div class="pgc-card pgc-card--glass" style="padding: 30px; margin-bottom: 30px;">
                     <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--pgc-gray-900); margin: 0 0 16px 0;">Get a Free Quote</h3>
                     <p style="color: var(--pgc-gray-600); margin: 0 0 20px 0; font-size: 0.95rem;">Get an instant estimate for your cleaning needs in <?php echo esc_html($location_name); ?>.</p>
-                    <a href="<?php echo home_url('/get-a-quote/'); ?>" style="display: block; text-align: center; width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Get Your Quote →</a>
+                    <a href="<?php echo home_url('/get-a-quote/'); ?>" class="pgc-btn pgc-btn-primary" style="display: block; text-align: center; width: 100%; padding: 14px; font-size: 15px;">Get a Quote</a>
                 </div>
                 
                 <!-- Contact Card -->
@@ -97,11 +97,11 @@ $location_name = str_replace('Cleaning Services in ', '', get_the_title());
                     </div>
                     <div style="margin-bottom: 16px;">
                         <div style="font-size: 13px; color: var(--pgc-gray-500); margin-bottom: 4px;">Email</div>
-                        <a href="mailto:<?php echo esc_attr(get_option('pgc_display_email', 'info@progreenclean.co.uk')); ?>" style="color: var(--pgc-primary); font-weight: 600; text-decoration: none;"><?php echo esc_html(get_option('pgc_display_email', 'info@progreenclean.co.uk')); ?></a>
+                        <a href="mailto:info@progreenclean.co.uk" style="color: var(--pgc-primary); font-weight: 600; text-decoration: none;">info@progreenclean.co.uk</a>
                     </div>
                     <div>
                         <div style="font-size: 13px; color: var(--pgc-gray-500); margin-bottom: 4px;">Hours</div>
-                        <div style="color: var(--pgc-gray-700); font-size: 0.95rem;"><?php echo nl2br(esc_html(get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm"))); ?></div>
+                        <div style="color: var(--pgc-gray-700); font-size: 0.95rem;">Mon-Fri: 8am-6pm<br>Sat: 9am-2pm</div>
                     </div>
                 </div>
                 
