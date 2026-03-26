@@ -1545,3 +1545,26 @@ a:hover { color: var(--pgc-primary-dark); }
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
+
+/* Fix CTA button styling */
+.pgc-cta .pgc-btn-white,
+.pgc-cta a[href*="get-a-quote"] {
+    display: inline-block;
+    background: #fff;
+    color: var(--pgc-primary);
+    padding: 18px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.pgc-cta .pgc-btn-white:hover,
+.pgc-cta a[href*="get-a-quote"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    background: #fff;
+    color: var(--pgc-primary);
+}
