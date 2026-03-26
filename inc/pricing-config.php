@@ -83,12 +83,21 @@ $pgc_pricing_sections = [
             ['key' => 'ow_pc_5bed', 'label' => '6+ Bedroom', 'type' => 'price'],
         ]
     ],
-    'Carpet Cleaning' => [
-        'description' => 'Professional carpet and upholstery cleaning',
+    'Carpet Cleaning - Room Size Definitions' => [
+        'description' => 'Define carpet room sizes and pricing',
+        'type' => 'settings',
         'fields' => [
-            ['key' => 'ow_carpet_small', 'label' => 'Small Room (4x4m)', 'type' => 'price'],
-            ['key' => 'ow_carpet_medium', 'label' => 'Medium Room (5x5m)', 'type' => 'price'],
-            ['key' => 'ow_carpet_large', 'label' => 'Large Room (6x6m)', 'type' => 'price'],
+            ['key' => 'ow_carpet_small_size', 'label' => 'Small Room Size Definition (e.g., 4x4m)', 'type' => 'text'],
+            ['key' => 'ow_carpet_small', 'label' => 'Small Room Price', 'type' => 'price'],
+            ['key' => 'ow_carpet_medium_size', 'label' => 'Medium Room Size Definition (e.g., 5x5m)', 'type' => 'text'],
+            ['key' => 'ow_carpet_medium', 'label' => 'Medium Room Price', 'type' => 'price'],
+            ['key' => 'ow_carpet_large_size', 'label' => 'Large Room Size Definition (e.g., 6x6m)', 'type' => 'text'],
+            ['key' => 'ow_carpet_large', 'label' => 'Large Room Price', 'type' => 'price'],
+        ]
+    ],
+    'Carpet Cleaning - Other' => [
+        'description' => 'Additional carpet cleaning options',
+        'fields' => [
             ['key' => 'ow_carpet_stairs_landing', 'label' => 'Stairs & Landing', 'type' => 'price'],
             ['key' => 'ow_carpet_unit', 'label' => 'Per Room (EOT)', 'type' => 'price'],
         ]
@@ -192,9 +201,12 @@ $pgc_default_pricing = [
     'ow_pc_4bed' => 439.00,
     'ow_pc_5bed' => 484.00,
     
-    // Carpet Cleaning
+    // Carpet Cleaning - Size Definitions
+    'ow_carpet_small_size' => '4x4m',
     'ow_carpet_small' => 62.00,
+    'ow_carpet_medium_size' => '5x5m',
     'ow_carpet_medium' => 73.00,
+    'ow_carpet_large_size' => '6x6m',
     'ow_carpet_large' => 90.00,
     'ow_carpet_stairs_landing' => 101.00,
     'ow_carpet_unit' => 62.00,

@@ -593,6 +593,13 @@
                             label += ' <span style="color: var(--pgc-gray-500); font-size: 14px;">(' + sizeDef + ')</span>';
                         }
                     }
+                    // Add size definitions for carpet size step
+                    if (stepId === 'carpet_size' && window.pgc_ajax && window.pgc_ajax.carpet_sizes) {
+                        const sizeDef = window.pgc_ajax.carpet_sizes[opt.value];
+                        if (sizeDef) {
+                            label += ' <span style="color: var(--pgc-gray-500); font-size: 14px;">(' + sizeDef + ')</span>';
+                        }
+                    }
                     html += '<div class="quote-option" data-step="' + stepId + '" data-value="' + opt.value + '" data-next="' + opt.next + '" data-price-key="' + (opt.priceKey || '') + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
                     html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + label + '</div>';
                     html += '</div>';

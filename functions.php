@@ -154,6 +154,11 @@ add_action('wp_enqueue_scripts', function() {
                 'medium' => pgc_get_text_option('ow_win_cons_roof_medium_size') ?: '4x4m',
                 'large' => pgc_get_text_option('ow_win_cons_roof_large_size') ?: '5x5m',
             ],
+            'carpet_sizes' => [
+                'small' => pgc_get_text_option('ow_carpet_small_size') ?: '4x4m',
+                'medium' => pgc_get_text_option('ow_carpet_medium_size') ?: '5x5m',
+                'large' => pgc_get_text_option('ow_carpet_large_size') ?: '6x6m',
+            ],
         ]);
     }
 });
