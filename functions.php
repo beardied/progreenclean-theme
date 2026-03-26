@@ -659,30 +659,45 @@ function pgc_ajax_calculate_quote_v2() {
             break;
             
         case 'carpet-cleaning':
-            $small = intval($answers['small_rooms'] ?? 0);
-            $medium = intval($answers['medium_rooms'] ?? 0);
-            $large = intval($answers['large_rooms'] ?? 0);
+            // Count room sizes from individual room answers (carpet_room_1, carpet_room_2, etc.)
+            $small = 0;
+            $medium = 0;
+            $large = 0;
+            
+            foreach ($answers as $key => $value) {
+                if (strpos($key, 'carpet_room_') === 0 && $value !== 'skip') {
+                    if ($value === 'small') $small++;
+                    elseif ($value === 'medium') $medium++;
+                    elseif ($value === 'large') $large++;
+                }
+            }
+            
+            // Get prices from admin settings with fallbacks
+            $smallPrice = floatval(get_option('pgc_price_carpet-small', 62));
+            $mediumPrice = floatval(get_option('pgc_price_carpet-medium', 73));
+            $largePrice = floatval(get_option('pgc_price_carpet-large', 90));
+            $stairsPrice = floatval(get_option('pgc_price_carpet-stairs', 101));
             
             if ($small > 0) {
-                $smallPrice = $small * 62;
-                $total += $smallPrice;
-                $breakdown[] = ['item' => 'Small rooms (' . $small . ')', 'price' => $smallPrice];
+                $smallTotal = $small * $smallPrice;
+                $total += $smallTotal;
+                $breakdown[] = ['item' => 'Small rooms (' . $small . ')', 'price' => $smallTotal];
             }
             if ($medium > 0) {
-                $mediumPrice = $medium * 73;
-                $total += $mediumPrice;
-                $breakdown[] = ['item' => 'Medium rooms (' . $medium . ')', 'price' => $mediumPrice];
+                $mediumTotal = $medium * $mediumPrice;
+                $total += $mediumTotal;
+                $breakdown[] = ['item' => 'Medium rooms (' . $medium . ')', 'price' => $mediumTotal];
             }
             if ($large > 0) {
-                $largePrice = $large * 90;
-                $total += $largePrice;
-                $breakdown[] = ['item' => 'Large rooms (' . $large . ')', 'price' => $largePrice];
+                $largeTotal = $large * $largePrice;
+                $total += $largeTotal;
+                $breakdown[] = ['item' => 'Large rooms (' . $large . ')', 'price' => $largeTotal];
             }
             
-            $stairs = $answers['stairs'] ?? 'no';
-            if ($stairs !== 'no') {
-                $total += 101;
-                $breakdown[] = ['item' => 'Stairs/landing', 'price' => 101];
+            $stairs = $answers['carpet_stairs'] ?? 'no';
+            if ($stairs === 'yes') {
+                $total += $stairsPrice;
+                $breakdown[] = ['item' => 'Stairs/landing', 'price' => $stairsPrice];
             }
             
             $totalRooms = $small + $medium + $large;

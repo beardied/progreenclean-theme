@@ -69,7 +69,7 @@
                 'eot_oven_check': 'Oven cleaning',
                 'eot_fridge_check': 'Fridge cleaning',
                 'carpet_prop_type': 'Property type',
-                'carpet_qty': 'Carpet size',
+                'carpet_rooms': 'Room sizes',
                 'carpet_stairs': 'Stairs/landing',
                 'carpet_parking': 'Parking',
                 'oven_size': 'Oven size',
@@ -90,6 +90,14 @@
             if (stepId === 'dom_hours' && answer.value) {
                 valueText = answer.value + ' hour' + (parseInt(answer.value) > 1 ? 's' : '');
             }
+            // Skip individual carpet room size steps from summary - we'll summarize them together
+            if (stepId.startsWith('carpet_room_')) {
+                continue;
+            }
+            // Skip carpet_rooms step itself - we'll summarize room sizes
+            if (stepId === 'carpet_rooms') {
+                continue;
+            }
             if (answer.value === 'no' && !stepId.includes('check')) {
                 continue; // Skip "no" answers unless they're specific questions
             }
@@ -101,6 +109,26 @@
             }
             
             summary += label + ': ' + valueText + '\n';
+        }
+        
+        // Add carpet room sizes summary
+        const roomSizes = [];
+        const roomCount = parseInt(answers['carpet_qty']?.value || '0');
+        for (let i = 1; i <= roomCount; i++) {
+            const roomKey = 'carpet_room_' + i;
+            if (answers[roomKey] && answers[roomKey].value) {
+                roomSizes.push(answers[roomKey].value);
+            }
+        }
+        if (roomSizes.length > 0) {
+            const sizeCounts = {};
+            roomSizes.forEach(size => {
+                sizeCounts[size] = (sizeCounts[size] || 0) + 1;
+            });
+            const sizeSummary = Object.entries(sizeCounts)
+                .map(([size, count]) => count + 'x ' + size.charAt(0).toUpperCase() + size.slice(1))
+                .join(', ');
+            summary += 'Room sizes: ' + sizeSummary + '\n';
         }
         
         summary += '\nTotal: £' + calculatedPrice.toFixed(2);
@@ -432,24 +460,19 @@
             question: 'Property type?',
             type: 'single',
             options: [
-                { value: 'bungalow', label: 'Bungalow', next: 'carpet_qty' },
-                { value: 'flat', label: 'Flat', next: 'carpet_qty' },
-                { value: 'house', label: 'House', next: 'carpet_qty' },
-                { value: 'town-house', label: 'Town House', next: 'carpet_qty' }
+                { value: 'bungalow', label: 'Bungalow', next: 'carpet_rooms' },
+                { value: 'flat', label: 'Flat', next: 'carpet_rooms' },
+                { value: 'house', label: 'House', next: 'carpet_rooms' },
+                { value: 'town-house', label: 'Town House', next: 'carpet_rooms' }
             ]
         },
-        'carpet_qty': {
-            question: 'Number of carpets requiring cleaning?',
-            type: 'single',
-            priceField: true,
-            options: [
-                { value: 'small', label: 'Small Room', priceKey: 'ow_carpet_small', next: 'carpet_stairs' },
-                { value: 'medium', label: 'Medium Room', priceKey: 'ow_carpet_medium', next: 'carpet_stairs' },
-                { value: 'large', label: 'Large Room', priceKey: 'ow_carpet_large', next: 'carpet_stairs' }
-            ]
+        'carpet_rooms': {
+            question: 'Select room sizes',
+            type: 'carpet_room_selector',
+            next: 'carpet_stairs'
         },
         'carpet_stairs': {
-            question: 'Stairs or landing?',
+            question: 'Include stairs and landing?',
             type: 'single',
             priceField: true,
             options: [
@@ -554,6 +577,80 @@
             stepHistory.push(currentStep);
             renderStep('win_access');
         });
+        
+        // Carpet room count change - regenerate rows
+        $(document).on('input', '#carpet-room-count', function() {
+            let count = parseInt($(this).val()) || 1;
+            if (count < 1) count = 1;
+            if (count > 20) count = 20;
+            $('#carpet-room-sizes').html(generateRoomSizeRows(count));
+        });
+        
+        // Carpet size button selection
+        $(document).on('click', '.carpet-size-btn', function() {
+            const room = $(this).data('room');
+            const size = $(this).data('size');
+            
+            // Remove selected class from other buttons in this room
+            $('.carpet-size-btn[data-room="' + room + '"]').css({
+                'background': 'white',
+                'border-color': 'var(--pgc-gray-200)',
+                'color': 'var(--pgc-gray-600)'
+            });
+            
+            // Add selected style to clicked button
+            $(this).css({
+                'background': 'linear-gradient(135deg, var(--pgc-primary), var(--pgc-secondary))',
+                'border-color': 'var(--pgc-primary)',
+                'color': 'white'
+            });
+            
+            // Store selection
+            $(this).closest('.carpet-room-row').attr('data-selected', size);
+        });
+        
+        // Carpet rooms continue button
+        $(document).on('click', '#carpet-rooms-continue', function() {
+            const roomCount = parseInt($('#carpet-room-count').val()) || 1;
+            const roomSelections = {};
+            let allSelected = true;
+            
+            for (let i = 1; i <= roomCount; i++) {
+                const selectedSize = $('.carpet-room-row[data-room="' + i + '"]').attr('data-selected');
+                if (!selectedSize) {
+                    allSelected = false;
+                    break;
+                }
+                roomSelections['carpet_room_' + i] = {
+                    value: selectedSize,
+                    label: selectedSize.charAt(0).toUpperCase() + selectedSize.slice(1)
+                };
+            }
+            
+            if (!allSelected) {
+                alert('Please select a size for each room');
+                return;
+            }
+            
+            // Save all room selections to answers
+            Object.assign(answers, roomSelections);
+            
+            // Save room count
+            answers['carpet_qty'] = {
+                value: roomCount.toString(),
+                label: roomCount + ' room' + (roomCount > 1 ? 's' : '')
+            };
+            
+            stepHistory.push(currentStep);
+            renderStep('carpet_stairs');
+        });
+        
+        // Initialize room rows when carpet_rooms step is rendered
+        $(document).on('renderStepComplete', function(e, stepId) {
+            if (stepId === 'carpet_rooms') {
+                $('#carpet-room-sizes').html(generateRoomSizeRows(1));
+            }
+        });
     }
     
     function renderStep(stepId) {
@@ -579,13 +676,32 @@
             html += '<input type="number" id="velux-qty" min="1" value="1" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid var(--pgc-gray-200); border-radius: 12px; text-align: center; margin-bottom: 20px;">';
             html += '<button type="button" id="velux-continue" class="pgc-btn pgc-btn-primary" style="width: 100%; padding: 16px;">Continue</button>';
             html += '</div>';
-        } else {
+        } 
+        // Special handling for carpet room selector
+        else if (step.type === 'carpet_room_selector') {
+            html += renderCarpetRoomSelector(stepId, step);
+        } 
+        else {
             // Options
             html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">';
             
             if (step.type === 'single') {
+                // Get carpet room quantity to filter options
+                const carpetQty = answers['carpet_qty']?.value || '1';
+                const maxRooms = parseInt(carpetQty) || 1;
+                
                 step.options.forEach(function(opt) {
+                    // Skip "No more rooms" option if we haven't reached that room number
+                    if (opt.hiddenIfLess && maxRooms < opt.hiddenIfLess) {
+                        return;
+                    }
+                    // Also skip "No more rooms" if this is the first room
+                    if (opt.value === 'skip' && stepId === 'carpet_room_1') {
+                        return;
+                    }
+                    
                     let label = opt.label;
+                    
                     // Add size definitions for conservatory size step
                     if (stepId === 'win_cons_size' && window.pgc_ajax && window.pgc_ajax.conservatory_sizes) {
                         const sizeDef = window.pgc_ajax.conservatory_sizes[opt.value];
@@ -593,13 +709,15 @@
                             label += ' <span style="color: var(--pgc-gray-500); font-size: 14px;">(' + sizeDef + ')</span>';
                         }
                     }
-                    // Add size definitions for carpet size step
-                    if (stepId === 'carpet_size' && window.pgc_ajax && window.pgc_ajax.carpet_sizes) {
+                    
+                    // Add size definitions for carpet room size steps
+                    if (stepId.startsWith('carpet_room_') && window.pgc_ajax && window.pgc_ajax.carpet_sizes) {
                         const sizeDef = window.pgc_ajax.carpet_sizes[opt.value];
                         if (sizeDef) {
                             label += ' <span style="color: var(--pgc-gray-500); font-size: 14px;">(' + sizeDef + ')</span>';
                         }
                     }
+                    
                     html += '<div class="quote-option" data-step="' + stepId + '" data-value="' + opt.value + '" data-next="' + opt.next + '" data-price-key="' + (opt.priceKey || '') + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
                     html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + label + '</div>';
                     html += '</div>';
@@ -618,6 +736,56 @@
         
         html += '</div>';
         container.html(html);
+        
+        // Trigger event for steps that need post-render initialization
+        $(document).trigger('renderStepComplete', [stepId]);
+    }
+    
+    // Render carpet room selector with number input and dynamic size rows
+    function renderCarpetRoomSelector(stepId, step) {
+        let html = '';
+        
+        // Room count input
+        html += '<div style="max-width: 200px; margin: 0 auto 30px;">';
+        html += '<label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--pgc-gray-700); text-align: center;">Number of rooms</label>';
+        html += '<input type="number" id="carpet-room-count" min="1" max="20" value="1" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid var(--pgc-gray-200); border-radius: 12px; text-align: center;">';
+        html += '</div>';
+        
+        // Container for room size selectors
+        html += '<div id="carpet-room-sizes" style="margin-bottom: 30px;">';
+        html += '</div>';
+        
+        // Next button
+        html += '<div style="text-align: center;">';
+        html += '<button type="button" id="carpet-rooms-continue" class="pgc-btn pgc-btn-primary" style="padding: 16px 48px; font-size: 16px;">Next →</button>';
+        html += '</div>';
+        
+        return html;
+    }
+    
+    // Generate room size selector rows
+    function generateRoomSizeRows(count) {
+        let html = '';
+        const sizes = window.pgc_ajax?.carpet_sizes || { small: '4x4m', medium: '5x5m', large: '6x6m' };
+        
+        for (let i = 1; i <= count; i++) {
+            html += '<div class="carpet-room-row" data-room="' + i + '" style="background: var(--pgc-gray-50); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 20px;">';
+            html += '<div style="font-weight: 600; color: var(--pgc-gray-700); min-width: 80px;">Room ' + i + ':</div>';
+            html += '<div style="display: flex; gap: 10px; flex-wrap: wrap;">';
+            
+            ['small', 'medium', 'large'].forEach(function(size) {
+                const sizeDef = sizes[size] || '';
+                const sizeLabel = size.charAt(0).toUpperCase() + size.slice(1);
+                html += '<button type="button" class="carpet-size-btn" data-room="' + i + '" data-size="' + size + '" style="padding: 10px 20px; border: 2px solid var(--pgc-gray-200); border-radius: 8px; background: white; cursor: pointer; font-weight: 500; color: var(--pgc-gray-600); transition: all 0.2s;">';
+                html += sizeLabel + ' <span style="font-size: 12px; color: var(--pgc-gray-400);">(' + sizeDef + ')</span>';
+                html += '</button>';
+            });
+            
+            html += '</div>';
+            html += '</div>';
+        }
+        
+        return html;
     }
     
     function getProgress() {
