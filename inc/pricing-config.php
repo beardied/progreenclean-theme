@@ -84,7 +84,6 @@ $pgc_pricing_sections = [
             ['label' => '5 Bed Terraced', 'keys' => ['ow_gut_5bed_terraced', 'ow_gut_5bed_terraced_ext', 'ow_gut_5bed_terraced_cons', 'ow_gut_5bed_terraced_soffit', 'ow_gut_5bed_terraced_survey']],
             ['label' => '5 Bed Bungalow', 'keys' => ['ow_gut_5bed_bungalow', 'ow_gut_5bed_bungalow_ext', 'ow_gut_5bed_bungalow_cons', 'ow_gut_5bed_bungalow_soffit', 'ow_gut_5bed_bungalow_survey']],
             ['label' => 'Townhouse', 'keys' => ['ow_gut_townhouse', 'ow_gut_townhouse_ext', 'ow_gut_townhouse_cons', 'ow_gut_townhouse_soffit', 'ow_gut_townhouse_survey']],
-            ['label' => 'Flat', 'keys' => ['ow_gut_flat', 'ow_gut_flat_ext', 'ow_gut_flat_cons', 'ow_gut_flat_soffit', 'ow_gut_flat_survey']],
         ]
     ],
     'Domestic Cleaning' => [
@@ -295,11 +294,6 @@ $pgc_default_pricing = [
     'ow_gut_townhouse_cons' => 25.00,
     'ow_gut_townhouse_soffit' => 45.00,
     'ow_gut_townhouse_survey' => 25.00,
-    'ow_gut_flat' => 70.00,
-    'ow_gut_flat_ext' => 10.00,
-    'ow_gut_flat_cons' => 10.00,
-    'ow_gut_flat_soffit' => 25.00,
-    'ow_gut_flat_survey' => 25.00,
     
     // Domestic Cleaning
     'ow_dom_hourly_rate' => 25.00,

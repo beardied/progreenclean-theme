@@ -299,8 +299,7 @@
                 { value: 'detached', label: 'Detached', next: 'gut_extension' },
                 { value: 'terraced', label: 'Terraced', next: 'gut_extension' },
                 { value: 'bungalow', label: 'Bungalow', next: 'gut_extension' },
-                { value: 'townhouse', label: 'Townhouse', next: 'gut_extension' },
-                { value: 'flat', label: 'Flat', next: 'gut_extension' }
+                { value: 'townhouse', label: 'Townhouse', next: 'gut_extension' }
             ]
         },
         'gut_extension': {
