@@ -665,10 +665,12 @@ function pgc_ajax_calculate_quote_v2() {
             $large = 0;
             
             foreach ($answers as $key => $value) {
-                if (strpos($key, 'carpet_room_') === 0 && $value !== 'skip') {
-                    if ($value === 'small') $small++;
-                    elseif ($value === 'medium') $medium++;
-                    elseif ($value === 'large') $large++;
+                if (strpos($key, 'carpet_room_') === 0) {
+                    // Value is stored as an array with 'value' and 'label' keys
+                    $roomSize = is_array($value) ? ($value['value'] ?? '') : $value;
+                    if ($roomSize === 'small') $small++;
+                    elseif ($roomSize === 'medium') $medium++;
+                    elseif ($roomSize === 'large') $large++;
                 }
             }
             
@@ -694,7 +696,7 @@ function pgc_ajax_calculate_quote_v2() {
                 $breakdown[] = ['item' => 'Large rooms (' . $large . ')', 'price' => $largeTotal];
             }
             
-            $stairs = $answers['carpet_stairs'] ?? 'no';
+            $stairs = is_array($answers['carpet_stairs'] ?? null) ? ($answers['carpet_stairs']['value'] ?? 'no') : ($answers['carpet_stairs'] ?? 'no');
             if ($stairs === 'yes') {
                 $total += $stairsPrice;
                 $breakdown[] = ['item' => 'Stairs/landing', 'price' => $stairsPrice];
