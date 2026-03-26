@@ -967,6 +967,43 @@
         const step = questionFlow[stepId];
         if (!step) return;
         
+        // Special handling for dom_addons - filter out already selected appliances
+        if (stepId === 'dom_addons') {
+            // Check which appliance services are already included
+            const hasOven = includedServices.indexOf('oven-cleaning') !== -1;
+            const hasFridge = includedServices.indexOf('fridge-cleaning') !== -1;
+            const hasMicrowave = includedServices.indexOf('microwave-cleaning') !== -1;
+            
+            // Filter options - only show appliances not already selected
+            const filteredOptions = step.options.filter(function(opt) {
+                if (opt.value === 'oven' && hasOven) return false;
+                if (opt.value === 'fridge' && hasFridge) return false;
+                if (opt.value === 'microwave' && hasMicrowave) return false;
+                return true;
+            });
+            
+            // If only bedsheets remains (or nothing), auto-answer and skip
+            const applianceOptions = filteredOptions.filter(function(opt) {
+                return opt.value !== 'bedsheets';
+            });
+            
+            if (applianceOptions.length === 0) {
+                // No appliance options left, save empty and skip to upsell
+                answers['dom_addons'] = {
+                    value: 'none',
+                    label: 'No extras',
+                    multi: []
+                };
+                stepHistory.push('dom_addons');
+                renderStep('upsell_services');
+                return;
+            }
+            
+            // Render with filtered options
+            renderDomAddonsWithOptions(filteredOptions);
+            return;
+        }
+        
         const container = $('#quote-wizard-container');
         let html = '<div class="quote-step" data-step="' + stepId + '">';
         
@@ -1195,6 +1232,54 @@
         }
         
         return html;
+    }
+    
+    // Render dom_addons with filtered options (for when appliances already selected)
+    function renderDomAddonsWithOptions(filteredOptions) {
+        const container = $('#quote-wizard-container');
+        const stepId = 'dom_addons';
+        const step = questionFlow[stepId];
+        
+        let html = '<div class="quote-step" data-step="' + stepId + '">';
+        
+        // Progress bar
+        html += '<div class="quote-progress" style="margin-bottom: 30px;">';
+        html += '<div style="height: 4px; background: var(--pgc-gray-200); border-radius: 2px;">';
+        html += '<div style="height: 100%; background: linear-gradient(90deg, var(--pgc-primary), var(--pgc-secondary)); width: ' + getProgress() + '%; transition: width 0.3s;"></div>';
+        html += '</div></div>';
+        
+        // Question
+        html += '<h2 style="font-size: 1.5rem; font-weight: 700; color: var(--pgc-gray-900); margin-bottom: 10px; text-align: center;">' + step.question + '</h2>';
+        
+        // Subtitle if present
+        if (step.subtitle) {
+            html += '<p style="font-size: 14px; color: var(--pgc-gray-500); text-align: center; margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;">' + step.subtitle + '</p>';
+        }
+        
+        // Options - use filtered options
+        html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px;">';
+        filteredOptions.forEach(function(opt) {
+            html += '<div class="quote-option-multi" data-step="' + stepId + '" data-value="' + opt.value + '" data-price-key="' + (opt.priceKey || '') + '" style="background: var(--pgc-gray-50); border: 2px solid transparent; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s;">';
+            html += '<div class="option-label" style="font-weight: 600; font-size: 16px; color: var(--pgc-gray-700);">' + opt.label + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '<div style="text-align: center;">';
+        html += '<button type="button" id="multi-continue" data-step="' + stepId + '" data-next="' + step.nextStep + '" class="pgc-btn pgc-btn-outline" style="padding: 16px 48px; font-size: 16px;">No Extras</button>';
+        html += '</div>';
+        
+        // Back button
+        if (stepHistory.length > 0) {
+            html += '<div style="text-align: center; margin-top: 30px;">';
+            html += '<button type="button" id="quote-back" class="pgc-btn pgc-btn-outline" style="padding: 12px 30px;">← Back</button>';
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        container.html(html);
+        
+        // Trigger event
+        $(document).trigger('renderStepComplete', [stepId]);
     }
     
     function getProgress() {
