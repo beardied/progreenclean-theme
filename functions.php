@@ -1841,6 +1841,44 @@ function pgc_ajax_submit_quote_v3() {
     $admin_message .= '<tr><td style="padding: 8px 0; color: #64748b;">Address</td><td style="padding: 8px 0;">' . nl2br($data['address']) . '<br>' . $data['postcode'] . '</td></tr>';
     $admin_message .= '</table>';
     
+    // Handle image uploads
+    $image_links = [];
+    $quote_upload_dir = '';
+    if (!empty($_FILES['quote_images'])) {
+        $upload_dir = wp_upload_dir();
+        $quote_upload_dir = $upload_dir['basedir'] . '/quote-uploads/' . $quote_id;
+        $quote_upload_url = $upload_dir['baseurl'] . '/quote-uploads/' . $quote_id;
+        
+        if (!file_exists($quote_upload_dir)) {
+            wp_mkdir_p($quote_upload_dir);
+        }
+        
+        $file_count = count($_FILES['quote_images']['name']);
+        for ($i = 0; $i < $file_count; $i++) {
+            if ($_FILES['quote_images']['error'][$i] === UPLOAD_ERR_OK) {
+                $tmp_name = $_FILES['quote_images']['tmp_name'][$i];
+                $name = sanitize_file_name($_FILES['quote_images']['name'][$i]);
+                $file_path = $quote_upload_dir . '/' . $name;
+                
+                // Validate file type
+                $file_type = wp_check_filetype($name, ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'webp' => 'image/webp']);
+                if ($file_type['type'] && move_uploaded_file($tmp_name, $file_path)) {
+                    $image_links[] = $quote_upload_url . '/' . $name;
+                }
+            }
+        }
+    }
+    
+    // If images uploaded, replace placeholder text in summary with image links
+    if (!empty($image_links) && !empty($quote_summary)) {
+        $placeholder = '(Please upload images to assist us with your quote and we will be in contact shortly)';
+        $image_links_text = "📷 IMAGES UPLOADED:\n";
+        foreach ($image_links as $index => $link) {
+            $image_links_text .= "Image " . ($index + 1) . ": " . $link . "\n";
+        }
+        $quote_summary = str_replace($placeholder, $image_links_text, $quote_summary);
+    }
+    
     // Merged Quote Details with Price Breakdown
     if (!empty($quote_summary) || !empty($data['breakdown'])) {
         $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Quote Summary & Price Breakdown</h3>';
@@ -1872,6 +1910,20 @@ function pgc_ajax_submit_quote_v3() {
     if (!empty($data['notes'])) {
         $admin_message .= '<h3 style="color: #0891b2; margin-top: 24px;">Additional Notes</h3>';
         $admin_message .= '<p style="color: #475569;">' . nl2br($data['notes']) . '</p>';
+    }
+    
+    // Add separate image links section for easy reference
+    if (!empty($image_links)) {
+        $admin_message .= '<div style="margin-top: 24px; padding: 16px; background: #f0f9ff; border-radius: 8px; border: 2px solid #0891b2;">';
+        $admin_message .= '<h3 style="color: #0891b2; margin-top: 0;">📷 Uploaded Images</h3>';
+        $admin_message .= '<p style="color: #475569; margin-bottom: 12px;">' . count($image_links) . ' image(s) uploaded. Click to view:</p>';
+        $admin_message .= '<ul style="margin: 0; padding-left: 20px;">';
+        foreach ($image_links as $index => $link) {
+            $admin_message .= '<li style="margin-bottom: 8px;"><a href="' . esc_url($link) . '" style="color: #0891b2; text-decoration: underline; font-weight: 600;" target="_blank">View Image ' . ($index + 1) . '</a></li>';
+        }
+        $admin_message .= '</ul>';
+        $admin_message .= '<p style="color: #64748b; font-size: 12px; margin-top: 12px; margin-bottom: 0;">Server path: ' . esc_html($quote_upload_dir) . '</p>';
+        $admin_message .= '</div>';
     }
     
     $admin_message .= pgc_get_email_footer();
