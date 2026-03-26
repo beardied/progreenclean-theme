@@ -98,9 +98,7 @@ $pgc_pricing_sections = [
     'Carpet Cleaning - Other' => [
         'description' => 'Additional carpet cleaning options',
         'fields' => [
-            ['key' => 'ow_carpet_stairs', 'label' => 'Stairs Only', 'type' => 'price'],
-            ['key' => 'ow_carpet_landing', 'label' => 'Landing Only', 'type' => 'price'],
-            ['key' => 'ow_carpet_stairs_landing', 'label' => 'Stairs & Landing (Combined)', 'type' => 'price'],
+            ['key' => 'ow_carpet_stairs_landing', 'label' => 'Stairs & Landing', 'type' => 'price'],
             ['key' => 'ow_carpet_unit', 'label' => 'Per Room (EOT)', 'type' => 'price'],
         ]
     ],
@@ -210,8 +208,6 @@ $pgc_default_pricing = [
     'ow_carpet_medium' => 73.00,
     'ow_carpet_large_size' => '6x6m',
     'ow_carpet_large' => 90.00,
-    'ow_carpet_stairs' => 75.00,
-    'ow_carpet_landing' => 35.00,
     'ow_carpet_stairs_landing' => 101.00,
     'ow_carpet_unit' => 62.00,
     
