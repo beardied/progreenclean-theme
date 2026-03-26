@@ -226,6 +226,43 @@ function pgc_admin_pricing(): void {
                 </tbody>
             </table>
         <?php endforeach; ?>
+        
+        <hr style="margin: 40px 0;">
+        
+        <h2><?php _e('Business Contact Settings', 'progreenclean'); ?></h2>
+        <p><?php _e('These settings are used throughout the website, emails, and contact forms.', 'progreenclean'); ?></p>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('pgc_settings');
+            $phone = get_option('pgc_phone', '');
+            $contact_email = get_option('pgc_contact_email', get_option('pgc_email', ''));
+            $opening_hours = get_option('pgc_opening_hours', "Mon-Fri: 8am-6pm\nSat: 9am-2pm\nSun: Closed");
+            ?>
+            <table class="form-table">
+                <tr>
+                    <th><label for="pgc_phone"><?php _e('Phone Number', 'progreenclean'); ?></label></th>
+                    <td>
+                        <input type="text" name="pgc_phone" id="pgc_phone" value="<?php echo esc_attr($phone); ?>" class="regular-text">
+                        <p class="description"><?php _e('Main contact phone number displayed throughout the site', 'progreenclean'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="pgc_contact_email"><?php _e('Contact Email', 'progreenclean'); ?></label></th>
+                    <td>
+                        <input type="email" name="pgc_contact_email" id="pgc_contact_email" value="<?php echo esc_attr($contact_email); ?>" class="regular-text">
+                        <p class="description"><?php _e('Email address used for quote notifications and contact forms', 'progreenclean'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="pgc_opening_hours"><?php _e('Opening Hours', 'progreenclean'); ?></label></th>
+                    <td>
+                        <textarea name="pgc_opening_hours" id="pgc_opening_hours" rows="4" class="regular-text" style="font-family: monospace;"><?php echo esc_textarea($opening_hours); ?></textarea>
+                        <p class="description"><?php _e('Enter each day/time on a new line. Displayed in footer, contact page, and emails.', 'progreenclean'); ?></p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button(__('Save Contact Settings', 'progreenclean')); ?>
+        </form>
     </div>
     <?php
 }
