@@ -674,11 +674,11 @@ function pgc_ajax_calculate_quote_v2() {
                 }
             }
             
-            // Get prices from admin settings with fallbacks
-            $smallPrice = floatval(get_option('pgc_price_carpet-small', 62));
-            $mediumPrice = floatval(get_option('pgc_price_carpet-medium', 73));
-            $largePrice = floatval(get_option('pgc_price_carpet-large', 90));
-            $stairsPrice = floatval(get_option('pgc_price_carpet-stairs', 101));
+            // Get prices from admin settings using pgc_get_price helper
+            $smallPrice = pgc_get_price('ow_carpet_small');
+            $mediumPrice = pgc_get_price('ow_carpet_medium');
+            $largePrice = pgc_get_price('ow_carpet_large');
+            $stairsPrice = pgc_get_price('ow_carpet_stairs_landing');
             
             if ($small > 0) {
                 $smallTotal = $small * $smallPrice;
