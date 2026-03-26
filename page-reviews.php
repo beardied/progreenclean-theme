@@ -1,57 +1,22 @@
 <?php
 /**
  * Template: Reviews
+ * Displays Google Reviews from the database
  */
 
 if (!defined('ABSPATH')) exit;
 
 get_header();
 
-// Sample reviews data - in production this could come from a custom post type or database
-$reviews = [
-    [
-        'name' => 'Sarah Johnson',
-        'location' => 'Epsom',
-        'rating' => 5,
-        'text' => 'Absolutely fantastic service! The team was professional, punctual, and left my windows sparkling clean. Will definitely be using ProGreenClean again.',
-        'service' => 'Window Cleaning',
-    ],
-    [
-        'name' => 'Michael Brown',
-        'location' => 'Sutton',
-        'rating' => 5,
-        'text' => 'Had my gutters cleaned and was amazed at how much debris they removed. Great price and excellent customer service. Highly recommend!',
-        'service' => 'Gutter Cleaning',
-    ],
-    [
-        'name' => 'Emma Williams',
-        'location' => 'Kingston',
-        'rating' => 5,
-        'text' => 'ProGreenClean did an end of tenancy clean for my apartment. The landlord was so impressed, I got my full deposit back. Thank you!',
-        'service' => 'End of Tenancy',
-    ],
-    [
-        'name' => 'David Smith',
-        'location' => 'Wimbledon',
-        'rating' => 5,
-        'text' => 'Regular domestic cleaning service for 6 months now. Always reliable, thorough, and the eco-friendly products are a big plus for our family.',
-        'service' => 'Domestic Cleaning',
-    ],
-    [
-        'name' => 'Lisa Anderson',
-        'location' => 'Mitcham',
-        'rating' => 5,
-        'text' => 'My oven looks brand new after their cleaning service. I had tried everything to clean it myself but they worked miracles!',
-        'service' => 'Oven Cleaning',
-    ],
-    [
-        'name' => 'James Taylor',
-        'location' => 'Croydon',
-        'rating' => 5,
-        'text' => 'Carpet cleaning was brilliant. Removed stains I thought were permanent. Professional service from start to finish.',
-        'service' => 'Carpet Cleaning',
-    ],
-];
+// Get reviews from database
+global $wpdb;
+$reviews = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}pgc_reviews ORDER BY create_time DESC");
+
+// Get aggregate data
+$avg_rating = get_option('pgc_reviews_average_rating', 0);
+$total_count = get_option('pgc_reviews_total_count', 0);
+$display_rating = $avg_rating ? number_format($avg_rating, 1) : '0.0';
+$display_count = $total_count ? $total_count : 0;
 ?>
 
 <!-- Page Header -->
@@ -63,13 +28,23 @@ $reviews = [
         <!-- Overall Rating -->
         <div style="margin-top: 30px; display: flex; align-items: center; justify-content: center; gap: 15px;">
             <div style="display: flex; gap: 4px;">
-                <?php for ($i = 0; $i < 5; $i++) : ?>
-                    <span style="font-size: 28px; color: #f59e0b;">★</span>
-                <?php endfor; ?>
+                <?php 
+                $full_stars = floor($display_rating);
+                $has_half = ($display_rating - $full_stars) >= 0.5;
+                for ($i = 0; $i < 5; $i++) : 
+                    if ($i < $full_stars) {
+                        echo '<span style="font-size: 28px; color: #f59e0b;">★</span>';
+                    } elseif ($i == $full_stars && $has_half) {
+                        echo '<span style="font-size: 28px; color: #f59e0b;">★</span>';
+                    } else {
+                        echo '<span style="font-size: 28px; color: var(--pgc-gray-300);">★</span>';
+                    }
+                endfor; 
+                ?>
             </div>
             <div style="text-align: left;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: var(--pgc-gray-900);">5.0</div>
-                <div style="font-size: 0.9rem; color: var(--pgc-gray-500);">Based on 500+ reviews</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--pgc-gray-900);"><?php echo $display_rating; ?></div>
+                <div style="font-size: 0.9rem; color: var(--pgc-gray-500);">Based on <?php echo number_format($display_count); ?> Google reviews</div>
             </div>
         </div>
     </div>
@@ -78,37 +53,61 @@ $reviews = [
 <!-- Reviews Grid -->
 <section class="pgc-section" style="padding: 80px 0;">
     <div class="pgc-container">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px;">
-            <?php foreach ($reviews as $review) : ?>
-                <div class="pgc-card pgc-card--glass" style="padding: 30px; display: flex; flex-direction: column; height: 100%;">
-                    <!-- Rating Stars -->
-                    <div style="display: flex; gap: 3px; margin-bottom: 15px;">
-                        <?php for ($i = 0; $i < $review['rating']; $i++) : ?>
-                            <span style="color: #f59e0b; font-size: 18px;">★</span>
-                        <?php endfor; ?>
-                    </div>
-                    
-                    <!-- Review Text -->
-                    <p style="color: var(--pgc-gray-700); line-height: 1.7; margin: 0 0 20px 0; flex-grow: 1; font-size: 1rem;">"<?php echo esc_html($review['text']); ?>"</p>
-                    
-                    <!-- Service Badge -->
-                    <div style="margin-bottom: 15px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); color: var(--pgc-primary); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;"><?php echo esc_html($review['service']); ?></span>
-                    </div>
-                    
-                    <!-- Author -->
-                    <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--pgc-gray-100); padding-top: 15px;">
-                        <div style="width: 45px; height: 45px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1.1rem;">
-                            <?php echo esc_html(substr($review['name'], 0, 1)); ?>
+        <?php if (empty($reviews)) : ?>
+            <div style="text-align: center; padding: 60px 20px;">
+                <p style="color: var(--pgc-gray-500); font-size: 1.1rem;">No reviews available yet. Check back soon!</p>
+            </div>
+        <?php else : ?>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px;">
+                <?php 
+                $star_map = ['ONE' => 1, 'TWO' => 2, 'THREE' => 3, 'FOUR' => 4, 'FIVE' => 5];
+                foreach ($reviews as $review) : 
+                    $rating = $star_map[$review->star_rating] ?? 0;
+                ?>
+                    <div class="pgc-card pgc-card--glass" style="padding: 30px; display: flex; flex-direction: column; height: 100%;">
+                        <!-- Rating Stars -->
+                        <div style="display: flex; gap: 3px; margin-bottom: 15px;">
+                            <?php for ($i = 0; $i < 5; $i++) : ?>
+                                <span style="color: <?php echo $i < $rating ? '#f59e0b' : 'var(--pgc-gray-300)'; ?>; font-size: 18px;">★</span>
+                            <?php endfor; ?>
                         </div>
-                        <div>
-                            <div style="font-weight: 700; color: var(--pgc-gray-900);"><?php echo esc_html($review['name']); ?></div>
-                            <div style="font-size: 0.85rem; color: var(--pgc-gray-500);"><?php echo esc_html($review['location']); ?></div>
+                        
+                        <!-- Review Text -->
+                        <p style="color: var(--pgc-gray-700); line-height: 1.7; margin: 0 0 20px 0; flex-grow: 1; font-size: 1rem;">"<?php echo esc_html($review->comment); ?>"</p>
+                        
+                        <!-- Date Badge -->
+                        <div style="margin-bottom: 15px;">
+                            <span style="display: inline-block; background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); color: var(--pgc-primary); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                                <?php echo date('F j, Y', strtotime($review->create_time)); ?>
+                            </span>
                         </div>
+                        
+                        <!-- Author -->
+                        <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--pgc-gray-100); padding-top: 15px;">
+                            <?php if (!empty($review->reviewer_profile_photo_url)) : ?>
+                                <img src="<?php echo esc_url($review->reviewer_profile_photo_url); ?>" alt="" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
+                            <?php else : ?>
+                                <div style="width: 45px; height: 45px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1.1rem;">
+                                    <?php echo esc_html(substr($review->reviewer_display_name, 0, 1)); ?>
+                                </div>
+                            <?php endif; ?>
+                            <div>
+                                <div style="font-weight: 700; color: var(--pgc-gray-900);"><?php echo esc_html($review->reviewer_display_name); ?></div>
+                                <div style="font-size: 0.85rem; color: var(--pgc-gray-500);">Verified Google Review</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Owner Reply (if exists) -->
+                        <?php if (!empty($review->reply_comment)) : ?>
+                            <div style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, rgba(8, 145, 178, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%); border-radius: 8px; border-left: 3px solid var(--pgc-primary);">
+                                <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--pgc-primary); margin-bottom: 6px;">Response from ProGreenClean</div>
+                                <p style="color: var(--pgc-gray-600); margin: 0; font-size: 0.9rem; line-height: 1.5;"><?php echo esc_html($review->reply_comment); ?></p>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -117,15 +116,15 @@ $reviews = [
     <div class="pgc-container">
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; text-align: center;">
             <div>
-                <div style="font-size: 2.5rem; font-weight: 800; color: var(--pgc-primary); margin-bottom: 8px;">500+</div>
-                <div style="color: var(--pgc-gray-600);">Happy Customers</div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--pgc-primary); margin-bottom: 8px;"><?php echo number_format($display_count); ?>+</div>
+                <div style="color: var(--pgc-gray-600);">Google Reviews</div>
             </div>
             <div>
                 <div style="font-size: 2.5rem; font-weight: 800; color: var(--pgc-primary); margin-bottom: 8px;">10+</div>
                 <div style="color: var(--pgc-gray-600);">Years Experience</div>
             </div>
             <div>
-                <div style="font-size: 2.5rem; font-weight: 800; color: var(--pgc-primary); margin-bottom: 8px;">5★</div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--pgc-primary); margin-bottom: 8px;"><?php echo $display_rating; ?>★</div>
                 <div style="color: var(--pgc-gray-600);">Average Rating</div>
             </div>
             <div>

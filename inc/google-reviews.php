@@ -585,7 +585,7 @@ add_shortcode('pgc_google_reviews', function($atts) {
         return '<p>No reviews yet.</p>';
     }
     
-    $output = '<div class="pgc-reviews-container">';
+    $output = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px;">';
     foreach ($reviews as $review) {
         $output .= pgc_render_review_card($review);
     }
@@ -611,13 +611,32 @@ add_shortcode('pgc_google_reviews_all', function() {
     
     $output = '';
     if ($avg_rating && $total_count) {
-        $output .= '<div class="pgc-reviews-summary" style="text-align: center; margin-bottom: 30px;">';
-        $output .= '<h2 style="font-size: 2rem; margin-bottom: 10px;">' . number_format($avg_rating, 1) . ' / 5</h2>';
-        $output .= '<p>Based on ' . $total_count . ' Google reviews</p>';
+        $display_rating = number_format($avg_rating, 1);
+        $full_stars = floor($display_rating);
+        $has_half = ($display_rating - $full_stars) >= 0.5;
+        
+        $output .= '<div style="text-align: center; margin-bottom: 40px;">';
+        $output .= '<div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px;">';
+        $output .= '<div style="display: flex; gap: 4px;">';
+        for ($i = 0; $i < 5; $i++) {
+            if ($i < $full_stars) {
+                $output .= '<span style="font-size: 32px; color: #f59e0b;">★</span>';
+            } elseif ($i == $full_stars && $has_half) {
+                $output .= '<span style="font-size: 32px; color: #f59e0b;">★</span>';
+            } else {
+                $output .= '<span style="font-size: 32px; color: var(--pgc-gray-300);">★</span>';
+            }
+        }
+        $output .= '</div>';
+        $output .= '<div style="text-align: left;">';
+        $output .= '<div style="font-size: 1.8rem; font-weight: 800; color: var(--pgc-gray-900);">' . $display_rating . '</div>';
+        $output .= '</div>';
+        $output .= '</div>';
+        $output .= '<p style="color: var(--pgc-gray-500); margin: 0;">Based on ' . number_format($total_count) . ' Google reviews</p>';
         $output .= '</div>';
     }
     
-    $output .= '<div class="pgc-reviews-container">';
+    $output .= '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px;">';
     foreach ($reviews as $review) {
         $output .= pgc_render_review_card($review, true);
     }
@@ -627,37 +646,52 @@ add_shortcode('pgc_google_reviews_all', function() {
 });
 
 /**
- * Helper: Render a single review card
+ * Helper: Render a single review card (matching reviews page styling)
  */
 function pgc_render_review_card($review, $show_reply = false) {
     $star_map = ['ONE' => 1, 'TWO' => 2, 'THREE' => 3, 'FOUR' => 4, 'FIVE' => 5];
     $rating = $star_map[$review->star_rating] ?? 0;
     
-    $stars = str_repeat('&#9733;', $rating) . str_repeat('&#9734;', 5 - $rating);
+    $output = '<div class="pgc-card pgc-card--glass" style="padding: 30px; display: flex; flex-direction: column; height: 100%;">';
     
-    $output = '<div class="pgc-review-card">';
-    $output .= '<div class="pgc-review-card__header">';
+    // Rating Stars
+    $output .= '<div style="display: flex; gap: 3px; margin-bottom: 15px;">';
+    for ($i = 0; $i < 5; $i++) {
+        $color = $i < $rating ? '#f59e0b' : 'var(--pgc-gray-300)';
+        $output .= '<span style="color: ' . $color . '; font-size: 18px;">★</span>';
+    }
+    $output .= '</div>';
     
+    // Review Text
+    $output .= '<p style="color: var(--pgc-gray-700); line-height: 1.7; margin: 0 0 20px 0; flex-grow: 1; font-size: 1rem;">"' . esc_html($review->comment) . '"</p>';
+    
+    // Date Badge
+    $output .= '<div style="margin-bottom: 15px;">';
+    $output .= '<span style="display: inline-block; background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); color: var(--pgc-primary); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">';
+    $output .= date('F j, Y', strtotime($review->create_time));
+    $output .= '</span>';
+    $output .= '</div>';
+    
+    // Author
+    $output .= '<div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--pgc-gray-100); padding-top: 15px;">';
     if (!empty($review->reviewer_profile_photo_url)) {
-        $output .= '<img class="pgc-review-card__avatar" src="' . esc_url($review->reviewer_profile_photo_url) . '" alt="' . esc_attr($review->reviewer_display_name) . '">';
+        $output .= '<img src="' . esc_url($review->reviewer_profile_photo_url) . '" alt="" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">';
+    } else {
+        $output .= '<div style="width: 45px; height: 45px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1.1rem;">';
+        $output .= esc_html(substr($review->reviewer_display_name, 0, 1));
+        $output .= '</div>';
     }
-    
-    $output .= '<div class="pgc-review-card__info">';
-    $output .= '<div class="pgc-review-card__name">' . esc_html($review->reviewer_display_name) . '</div>';
-    $output .= '<div class="pgc-review-card__stars">' . $stars . '</div>';
+    $output .= '<div>';
+    $output .= '<div style="font-weight: 700; color: var(--pgc-gray-900);">' . esc_html($review->reviewer_display_name) . '</div>';
+    $output .= '<div style="font-size: 0.85rem; color: var(--pgc-gray-500);">Verified Google Review</div>';
     $output .= '</div>';
     $output .= '</div>';
     
-    if (!empty($review->comment)) {
-        $output .= '<p class="pgc-review-card__comment">' . nl2br(esc_html($review->comment)) . '</p>';
-    }
-    
-    $output .= '<div class="pgc-review-card__date">' . date('F j, Y', strtotime($review->create_time)) . '</div>';
-    
+    // Owner Reply
     if ($show_reply && !empty($review->reply_comment)) {
-        $output .= '<div class="pgc-review-card__reply">';
-        $output .= '<p class="pgc-review-card__reply-label">Response from ProGreenClean</p>';
-        $output .= '<p class="pgc-review-card__reply-text">' . nl2br(esc_html($review->reply_comment)) . '</p>';
+        $output .= '<div style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, rgba(8, 145, 178, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%); border-radius: 8px; border-left: 3px solid var(--pgc-primary);">';
+        $output .= '<div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--pgc-primary); margin-bottom: 6px;">Response from ProGreenClean</div>';
+        $output .= '<p style="color: var(--pgc-gray-600); margin: 0; font-size: 0.9rem; line-height: 1.5;">' . esc_html($review->reply_comment) . '</p>';
         $output .= '</div>';
     }
     
