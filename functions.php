@@ -984,6 +984,11 @@ add_shortcode('pgc_price', function($atts) {
         return '';
     }
     
+    // Domestic cleaning hourly rate has a minimum of 2 hours
+    if ($atts['key'] === 'ow_dom_hourly_rate') {
+        $price = $price * 2;
+    }
+    
     return esc_html($atts['prefix'] . number_format($price, intval($atts['decimals'])) . $atts['suffix']);
 });
 
