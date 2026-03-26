@@ -50,7 +50,7 @@ add_action('after_setup_theme', 'pgc_create_reviews_table');
  */
 add_action('admin_menu', function() {
     add_submenu_page(
-        'pgc-pricing',
+        'pgc-pricing-v3',
         __('Google Reviews', 'progreenclean'),
         __('Google Reviews', 'progreenclean'),
         'manage_options',
