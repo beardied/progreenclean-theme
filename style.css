@@ -2,7 +2,7 @@
 Theme Name: ProGreenClean
 Theme URI: https://progreenclean.co.uk
 Author: ProGreenClean
-Version: 3.0.5
+Version: 3.0.7
 Requires at least: 6.0
 Requires PHP: 7.4
 */
@@ -932,7 +932,9 @@ a:hover { color: var(--pgc-primary-dark); }
 }
 
 .pgc-footer-links ul {
-    list-style: none;
+	list-style: none !important;
+    list-style-type: none !important;
+    background-image: none !important;
     margin: 0;
     padding: 0;
     display: flex;
@@ -941,8 +943,15 @@ a:hover { color: var(--pgc-primary-dark); }
 }
 
 .pgc-footer-links li {
+	list-style: none !important;
+    list-style-type: none !important;
+    background-image: none !important;
     margin: 0;
     padding: 0;
+}
+
+.pgc-footer-links li::before {
+    content: none !important;
 }
 
 .pgc-footer-links a {

@@ -5,7 +5,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('PGC_VERSION', '3.0.5');
+define('PGC_VERSION', '3.0.7');
 define('PGC_PATH', get_template_directory());
 define('PGC_URL', get_template_directory_uri());
 
@@ -139,7 +139,7 @@ add_action('save_post', function($post_id) {
  * Enqueue Scripts and Styles
  */
 add_action('wp_enqueue_scripts', function() {
-    $cache_buster = '3.0.4.' . time();
+    $cache_buster = '3.0.7.' . time();
     wp_enqueue_style('progreenclean-style', get_stylesheet_uri(), [], $cache_buster);
     wp_enqueue_style('progreenclean-blocks', PGC_URL . '/assets/css/blocks.css', [], $cache_buster);
     wp_enqueue_script('progreenclean-main', PGC_URL . '/assets/js/main.js', [], $cache_buster, true);
@@ -151,7 +151,7 @@ add_action('wp_enqueue_scripts', function() {
             'nonce' => wp_create_nonce('pgc_nonce'),
             'conservatory_sizes' => [
                 'small' => pgc_get_text_option('ow_win_cons_roof_small_size') ?: '3x3m',
-                'medium' => pgc_get_text_option('ow_win_cons_roof_medium_size') ?: '4x4m / Lean to',
+                'medium' => pgc_get_text_option('ow_win_cons_roof_medium_size') ?: '4x4m',
                 'large' => pgc_get_text_option('ow_win_cons_roof_large_size') ?: '5x5m',
             ],
         ]);
@@ -213,6 +213,20 @@ function pgc_render_settings_page() {
     </div>
     <?php
 }
+
+/**
+ * Handle All Includes
+ */
+//require_once PGC_PATH . '/inc/blocks.php';
+require_once PGC_PATH . '/inc/pricing-config.php';
+//require_once PGC_PATH . '/inc/database.php';
+//require_once PGC_PATH . '/inc/quote-system.php';
+//require_once PGC_PATH . '/inc/email-templates.php';
+//require_once PGC_PATH . '/inc/schema-markup.php';
+//require_once PGC_PATH . '/inc/template-functions.php';
+//require_once PGC_PATH . '/inc/admin-pricing.php';
+//require_once PGC_PATH . '/inc/admin-menu.php';
+
 
 /**
  * Pricing Page with Multi-Column Layout
@@ -1065,19 +1079,36 @@ add_shortcode('pgc_children', function($atts) {
             $price_suffix = get_post_meta($child->ID, '_pgc_price_suffix', true);
             
             $price_html = '';
+            $has_price = false;
+            
+            // Check if we have a valid price from key
             if ($price_key) {
                 $price = pgc_get_price($price_key);
                 if ($price > 0) {
-                    $price_html = '<span class="pgc-service-card__price">';
-                    if ($price_prefix) {
-                        $price_html .= '<span class="pgc-service-card__price-prefix">' . esc_html($price_prefix) . '</span>';
-                    }
-                    $price_html .= '<span class="pgc-service-card__price-value">£' . number_format($price, 2) . '</span>';
-                    if ($price_suffix) {
-                        $price_html .= '<span class="pgc-service-card__price-suffix">' . esc_html($price_suffix) . '</span>';
-                    }
-                    $price_html .= '</span>';
+                    $has_price = true;
                 }
+            }
+            
+            // Build price HTML if we have any price-related content
+            if ($has_price || $price_prefix || $price_suffix) {
+                $price_html = '<span class="pgc-service-card__price">';
+                
+                // Prefix - always show if set, styled as prefix
+                if ($price_prefix) {
+                    $price_html .= '<span class="pgc-service-card__price-prefix">' . esc_html($price_prefix) . '</span>';
+                }
+                
+                // Price value (if key exists and valid)
+                if ($has_price) {
+                    $price_html .= '<span class="pgc-service-card__price-value">£' . number_format($price, 2) . '</span>';
+                }
+                
+                // Suffix - no space before it, appended directly
+                if ($price_suffix) {
+                    $price_html .= '<span class="pgc-service-card__price-suffix">' . esc_html($price_suffix) . '</span>';
+                }
+                
+                $price_html .= '</span>';
             }
             
             // Get featured image
@@ -1129,12 +1160,6 @@ add_action('wp_head', function() {
     ];
     echo '<script type="application/ld+json">' . wp_json_encode($schema) . '</script>';
 });
-
-
-/**
- * Include Pricing Configuration
- */
-require_once PGC_PATH . '/inc/pricing-config.php';
 
 /**
  * New Admin Pricing Page V3

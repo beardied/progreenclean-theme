@@ -13,68 +13,52 @@ if (!defined('ABSPATH')) {
  * Register custom blocks using block.json
  */
 add_action('init', function (): void {
+
     // Blocks with block.json files (WordPress 5.8+ method)
     $blocks_with_json = [
+		'test-block',
         'hero',
-        'service-grid',
-        'service-card',
-        'testimonial-carousel',
-        'faq-accordion',
-        'faq-item',
-        'faq-custom',
-        'location-map',
-        'cta-block',
-        'process-steps',
-        'features-grid',
-        'feature-item',
-        'pricing-table',
-        'team-grid',
-        'related-services',
-        'trust-badge',
-        'rating-summary',
-        'before-after',
-        'contact-methods',
-        'quote-wizard',
-        'section-background',
+        //'service-grid',
+        //'service-card',
+        //'testimonial-carousel',
+        //'faq-accordion',
+        //'faq-item',
+        //'faq-custom',
+        //'location-map',
+        //'cta-block',
+        //'process-steps',
+        //'features-grid',
+        //'feature-item',
+        //'pricing-table',
+        //'team-grid',
+        //'related-services',
+        //'trust-badge',
+        //'rating-summary',
+        //'before-after',
+        //'contact-methods',
+        //'quote-wizard',
+        //'section-background',
     ];
     
     foreach ($blocks_with_json as $block) {
         $block_path = PGC_PATH . '/blocks/' . $block;
-        
-        // Check if block.json exists
         if (file_exists($block_path . '/block.json')) {
-            // Use register_block_type with block.json (modern method)
-            register_block_type($block_path);
-        } elseif (file_exists($block_path . '/block.php')) {
-            // Fallback to PHP registration (legacy method)
-            require_once $block_path . '/block.php';
+            $result = register_block_type($block_path);
         }
     }
-});
-
-/**
- * Enqueue block assets
- */
-add_action('enqueue_block_editor_assets', function (): void {
-    wp_enqueue_style(
-        'progreenclean-editor',
-        PGC_URL . '/assets/css/editor-style.css',
-        [],
-        PGC_VERSION
-    );
-});
+}, 5);
 
 /**
  * Block categories
  */
 add_filter('block_categories_all', function (array $categories): array {
-    $categories[] = [
+    array_unshift($categories, [
         'slug' => 'progreenclean',
-        'title' => __('ProGreenClean', 'progreenclean'),
+        'title' => 'ProGreenClean',
         'icon' => 'admin-tools',
-    ];
+    ]);
     return $categories;
-});
+}, 5);
 
 /**
  * Register block pattern categories
@@ -98,11 +82,15 @@ add_filter('allowed_block_types_all', function($allowed_blocks, $editor_context)
     
     $allowed = [];
     
-    foreach ($block_types as $block_type => $block) {
-        // Allow core blocks
-        if (strpos($block_type, 'core/') === 0) {
-            $allowed[] = $block_type;
-        }
+	 foreach ($block_types as $block_type => $block) {
+		// Skip template parts explicitly
+		if ($block_type === 'core/template-part') {
+			continue;
+		}
+		// Allow core blocks
+		if (strpos($block_type, 'core/') === 0) {
+			$allowed[] = $block_type;
+		}
         // Allow ProGreenClean blocks
         elseif (strpos($block_type, 'progreenclean/') === 0) {
             $allowed[] = $block_type;
@@ -115,3 +103,25 @@ add_filter('allowed_block_types_all', function($allowed_blocks, $editor_context)
     
     return $allowed;
 }, 10, 2);
+
+
+
+add_action('admin_footer', function(): void {
+    if (!is_admin()) return;
+    ?>
+    <script>
+    window.addEventListener('load', function() {
+        var blocks = wp.blocks.getBlockTypes();
+        var pgc = blocks.filter(b => b.name.includes('progreenclean'));
+        console.log('=== PGC BLOCKS REGISTERED ===');
+        console.log('Total blocks:', blocks.length);
+        console.log('ProGreenClean blocks:', pgc.length);
+        pgc.forEach(b => console.log(' -', b.name));
+        
+        var cats = wp.blocks.getCategories();
+        console.log('=== CATEGORIES ===');
+        cats.forEach(c => console.log(' -', c.slug, ':', c.title));
+    });
+    </script>
+    <?php
+});
