@@ -287,7 +287,7 @@
             type: 'single',
             options: [
                 { value: 'yes', label: 'Yes', next: 'display_quote' },
-                { value: 'no', label: 'No', next: 'contact_form' }
+                { value: 'no', label: 'No', next: 'display_quote' }
             ]
         },
         
@@ -526,7 +526,7 @@
             type: 'single',
             options: [
                 { value: 'yes', label: 'Yes', next: 'display_quote' },
-                { value: 'no', label: 'No', next: 'contact_form' }
+                { value: 'no', label: 'No', next: 'display_quote' }
             ]
         },
         
@@ -1012,6 +1012,13 @@
             // Render with filtered options
             renderDomAddonsWithOptions(filteredOptions);
             return;
+        }
+        
+        // Scroll to top of wizard on every step change
+        const wizardContainer = document.getElementById('quote-wizard-container');
+        if (wizardContainer) {
+            wizardContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({ top: wizardContainer.offsetTop - 100, behavior: 'smooth' });
         }
         
         const container = $('#quote-wizard-container');
