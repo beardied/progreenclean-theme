@@ -18,8 +18,7 @@ if ($services_page) {
     $services = get_pages([
         'child_of' => $services_page->ID,
         'sort_column' => 'menu_order',
-        'sort_order' => 'ASC',
-        'number' => 6
+        'sort_order' => 'ASC'
     ]);
 }
 ?>
