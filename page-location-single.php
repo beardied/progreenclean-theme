@@ -91,14 +91,14 @@ if ($services_page) {
                 <!-- Our Services Card -->
                 <div style="background: #fff; border-radius: 20px; padding: 35px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
                     <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--pgc-gray-900); margin: 0 0 20px 0;">Our Services</h3>
-                    <nav style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
                         <?php foreach ($services as $service) : ?>
-                            <a href="<?php echo get_permalink($service->ID); ?>" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--pgc-gray-50); border-radius: 10px; text-decoration: none; color: var(--pgc-gray-700); font-weight: 500; transition: all 0.3s;">
-                                <span><?php echo esc_html($service->post_title); ?></span>
-                                <span style="color: var(--pgc-primary);">→</span>
-                            </a>
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--pgc-gray-50); border-radius: 10px;">
+                                <span style="width: 8px; height: 8px; background: linear-gradient(135deg, var(--pgc-primary) 0%, var(--pgc-secondary) 100%); border-radius: 50%; flex-shrink: 0;"></span>
+                                <span style="color: var(--pgc-gray-700); font-weight: 500;"><?php echo esc_html($service->post_title); ?></span>
+                            </div>
                         <?php endforeach; ?>
-                    </nav>
+                    </div>
                 </div>
                 
                 <!-- Other Locations Card -->
@@ -109,8 +109,7 @@ if ($services_page) {
                         $other_locations = get_pages([
                             'child_of' => $parent_page ? $parent_page->ID : 0,
                             'exclude' => get_the_ID(),
-                            'sort_column' => 'menu_order',
-                            'number' => 6
+                            'sort_column' => 'menu_order'
                         ]);
                         foreach ($other_locations as $loc) :
                             $loc_name = str_replace('Cleaning Services in ', '', $loc->post_title);
